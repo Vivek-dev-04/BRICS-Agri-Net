@@ -1,0 +1,155 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  country   String   @default("IN") // IN, BR, RU, CN, ZA
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  farms     Farm[]
+}
+
+model Farm {
+  id                    String                 @id @default(cuid())
+  userId                String
+  user                  User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                  String
+  location              String
+  latitude              Float
+  longitude             Float
+  area                  Float                  // in acres
+  soilType              String
+  cropId                String?
+  crop                  Crop?                  @relation(fields: [cropId], references: [id])
+  cropVariety           String?
+  sowingDate            DateTime?
+  irrigationType        String                 // Drip, Sprinkler, Flood, Rainfed
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  soilObservations      SoilData[]
+  weatherObservations   WeatherObservation[]
+  satelliteObservations SatelliteObservation[]
+  advisories            Advisory[]
+  diseaseDiagnoses      DiseaseDiagnosis[]
+  regenerativePractices RegenerativePractice[]
+}
+
+model Crop {
+  id                 String   @id @default(cuid())
+  name               String   @unique // Wheat, Rice, Soybean, Maize, Cotton
+  scientificName     String?
+  typicalSeason      String?
+  growthCycleDays    Int?
+  farms              Farm[]
+}
+
+model SoilData {
+  id            String   @id @default(cuid())
+  farmId        String
+  farm          Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  testedAt      DateTime @default(now())
+  nitrogen      Float    // kg/ha or rating
+  phosphorus    Float
+  potassium     Float
+  ph            Float
+  organicCarbon Float
+  moisture      Float?
+  soilScore     Float?   // 0 - 100
+  notes         String?
+}
+
+model WeatherObservation {
+  id              String   @id @default(cuid())
+  farmId          String
+  farm            Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  recordedAt      DateTime @default(now())
+  temperature     Float
+  humidity        Float
+  rainfall        Float
+  windSpeed       Float
+  rainProbability Float?
+  weatherRisk     String?  // Low, Moderate, High, Severe
+  forecastData    Json?
+}
+
+model SatelliteObservation {
+  id               String   @id @default(cuid())
+  farmId           String
+  farm             Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  capturedAt       DateTime @default(now())
+  ndvi             Float    // 0.0 - 1.0
+  vegetationStatus String   // Healthy, Normal, Moderate Stress, Severe Stress
+  stressIndex      Float?
+  zoneData         Json?
+}
+
+model Advisory {
+  id                   String   @id @default(cuid())
+  farmId               String
+  farm                 Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  generatedAt          DateTime @default(now())
+  cropHealthStatus     String
+  irrigationAdvice     String
+  soilAdvice           String
+  diseaseRiskNotice    String
+  regenerativeAdvice   String
+  rawOutput            Json?
+}
+
+model DiseaseDiagnosis {
+  id                 String   @id @default(cuid())
+  farmId             String
+  farm               Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  diagnosedAt        DateTime @default(now())
+  imageUrl           String
+  diseaseName        String
+  confidence         Float    // 0.0 - 1.0 (e.g. 0.92 for 92%)
+  severity           String   // Low, Moderate, Severe
+  recommendedActions String[]
+  preventiveMeasures String[]
+}
+
+model RegenerativePractice {
+  id          String   @id @default(cuid())
+  farmId      String
+  farm        Farm     @relation(fields: [farmId], references: [id], onDelete: Cascade)
+  practice    String   // Crop rotation, Cover crops, Reduced tillage, Residue retention, Compost
+  description String
+  status      String   @default("Recommended") // Recommended, Planned, Active, Completed
+  carbonImpact String?
+  createdAt   DateTime @default(now())
+}
+
+model Country {
+  id          String   @id @default(cuid())
+  code        String   @unique // IN, BR, RU, CN, ZA
+  name        String
+  flagEmoji   String
+  majorCrop   String
+  climateRisk String   // Low, Medium, High
+  avgNdvi     Float?
+  updatedAt   DateTime @updatedAt
+}
+
+model AgriculturalDataset {
+  id          String   @id @default(cuid())
+  countryCode String   // IN, BR, RU, CN, ZA
+  region      String
+  crop        String
+  nitrogen    Float
+  phosphorus  Float
+  potassium   Float
+  temperature Float
+  rainfall    Float
+  ndvi        Float
+  recordedAt  DateTime @default(now())
+}
