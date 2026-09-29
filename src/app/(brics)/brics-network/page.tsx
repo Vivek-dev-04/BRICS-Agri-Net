@@ -5,82 +5,83 @@ import { Navbar } from "@/components/Navbar";
 import { DEMO_BRICS_COUNTRIES } from "@/lib/mock-data";
 import {
   Globe2,
-  TrendingUp,
-  ShieldAlert,
-  ArrowRight,
-  Database,
   Building2,
   CheckCircle2,
-  Activity,
+  ArrowRight,
+  ShieldCheck,
+  TrendingUp,
 } from "lucide-react";
 
 export default function BricsNetworkPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <Navbar />
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-8">
-        <div className="border-b border-slate-800 pb-5">
-          <div className="flex items-center gap-2">
-            <span className="rounded bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-400 border border-emerald-500/30">
-              Module 9
-            </span>
-            <span className="text-xs text-slate-400">Multilateral Agro-Intelligence Layer</span>
+      <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="rounded bg-blue-100 text-blue-900 px-2.5 py-0.5 text-xs font-bold border border-blue-300">
+                Multilateral Cooperation
+              </span>
+              <span className="text-xs text-slate-500 font-medium">5 Active Member Nodes</span>
+            </div>
+
+            <h1 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 flex items-center gap-2">
+              <Globe2 className="h-6 w-6 text-emerald-800" />
+              BRICS Agricultural Cooperation Network
+            </h1>
+
+            <p className="mt-0.5 text-xs sm:text-sm text-slate-600">
+              Interoperable agricultural insights, climate resilience benchmarking, and standardized data exchange across BRICS member states.
+            </p>
           </div>
-          <h1 className="mt-1 text-2xl font-bold tracking-tight text-white flex items-center gap-2">
-            <Globe2 className="h-6 w-6 text-emerald-400" />
-            BRICS Agricultural Cooperation Network
-          </h1>
-          <p className="mt-0.5 text-xs text-slate-400">
-            Standardized cross-border agricultural insights, climate resilience benchmarking, and shared AI models across BRICS member states.
-          </p>
+
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm self-start sm:self-auto"
+          >
+            Back to Dashboard <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
         </div>
 
         {/* Network Metrics Overview */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="glass-panel rounded-2xl p-5 border border-slate-800">
-            <div className="text-xs text-slate-400 font-medium">Participating Nodes</div>
-            <div className="mt-2 text-3xl font-extrabold text-white flex items-center gap-2">
-              5 <span className="text-xs font-normal text-emerald-400">Active</span>
+          <div className="gov-card p-5 border border-slate-200">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Member States</div>
+            <div className="mt-2 text-3xl font-extrabold text-slate-900 flex items-center gap-2">
+              5 <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">Active</span>
             </div>
-            <p className="mt-1 text-[11px] text-slate-400">Brazil • Russia • India • China • SA</p>
+            <p className="mt-1 text-xs text-slate-600">Brazil • Russia • India • China • SA</p>
           </div>
 
-          <div className="glass-panel rounded-2xl p-5 border border-slate-800">
-            <div className="text-xs text-slate-400 font-medium">Aggregated Telemetry Points</div>
-            <div className="mt-2 text-3xl font-extrabold text-white">67,500+</div>
-            <p className="mt-1 text-[11px] text-emerald-400">Standardized via CADS schema</p>
+          <div className="gov-card p-5 border border-slate-200">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Shared Observations</div>
+            <div className="mt-2 text-3xl font-extrabold text-slate-900">67,500+</div>
+            <p className="mt-1 text-xs text-emerald-800 font-medium">Standardized via CADS format</p>
           </div>
 
-          <div className="glass-panel rounded-2xl p-5 border border-slate-800">
-            <div className="text-xs text-slate-400 font-medium">Avg Member State NDVI</div>
-            <div className="mt-2 text-3xl font-extrabold text-white">0.658</div>
-            <p className="mt-1 text-[11px] text-slate-400">Normalized vegetation health</p>
+          <div className="gov-card p-5 border border-slate-200">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Mean Member NDVI</div>
+            <div className="mt-2 text-3xl font-extrabold text-slate-900">0.658</div>
+            <p className="mt-1 text-xs text-slate-600">Normalized vegetation health</p>
           </div>
 
-          <div className="glass-panel rounded-2xl p-5 border border-slate-800">
-            <div className="text-xs text-slate-400 font-medium">Data Privacy Protocol</div>
-            <div className="mt-2 text-2xl font-bold text-emerald-400 flex items-center gap-1.5">
+          <div className="gov-card p-5 border border-slate-200">
+            <div className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Privacy Protocol</div>
+            <div className="mt-2 text-xl font-bold text-emerald-800 flex items-center gap-1.5">
               <CheckCircle2 className="h-5 w-5" /> Anonymized
             </div>
-            <p className="mt-1 text-[11px] text-slate-400">Zero farmer PII exposed</p>
+            <p className="mt-1 text-xs text-slate-600">Zero farmer PII transmitted</p>
           </div>
         </div>
 
-        {/* Country Breakdown Cards (PRD Section 14) */}
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-bold text-white flex items-center gap-2">
-              <Building2 className="h-4 w-4 text-emerald-400" />
-              Member State Macro Agricultural Profiles
-            </h3>
-            <Link
-              href="/interoperability"
-              className="text-xs text-emerald-400 hover:text-emerald-300 flex items-center gap-1"
-            >
-              Access Public CADS Endpoints <ArrowRight className="h-3 w-3" />
-            </Link>
-          </div>
+        {/* Member Country Breakdown */}
+        <div className="space-y-3">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
+            <Building2 className="h-4 w-4 text-emerald-800" />
+            Member State Macro Agricultural Profiles
+          </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {DEMO_BRICS_COUNTRIES.map((c) => {
@@ -90,47 +91,47 @@ export default function BricsNetworkPage() {
               return (
                 <div
                   key={c.code}
-                  className="glass-panel glass-panel-hover rounded-2xl p-5 border border-slate-800 space-y-4"
+                  className="gov-card p-5 border border-slate-200 space-y-4 gov-card-hover"
                 >
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <span className="text-3xl">{c.flag}</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-4xl leading-none">{c.flag}</span>
                       <div>
-                        <h4 className="text-base font-bold text-white flex items-center gap-1.5">
+                        <h3 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
                           {c.name}
-                          <span className="text-xs font-mono font-normal text-slate-500">[{c.code}]</span>
-                        </h4>
-                        <span className="text-xs text-slate-400">Major: {c.majorCrop}</span>
+                          <span className="text-xs font-mono font-medium text-slate-400">[{c.code}]</span>
+                        </h3>
+                        <span className="text-xs text-slate-600 font-medium">Major Crop: {c.majorCrop}</span>
                       </div>
                     </div>
 
                     <span
                       className={`rounded-full px-2.5 py-0.5 text-xs font-bold border ${
                         isHigh
-                          ? "bg-red-500/20 text-red-300 border-red-500/40"
+                          ? "bg-red-50 text-red-800 border-red-200"
                           : isMedium
-                          ? "bg-amber-500/20 text-amber-300 border-amber-500/40"
-                          : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                          ? "bg-amber-50 text-amber-800 border-amber-200"
+                          : "bg-emerald-50 text-emerald-800 border-emerald-200"
                       }`}
                     >
                       {c.climateRisk} Risk
                     </span>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800/80 grid grid-cols-2 gap-2 text-xs">
+                  <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2 text-xs">
                     <div>
-                      <span className="text-slate-400">Mean Canopy NDVI:</span>
-                      <p className="font-bold text-white mt-0.5">{c.avgNdvi}</p>
+                      <span className="text-slate-500">Mean Canopy NDVI:</span>
+                      <p className="font-bold text-slate-900 mt-0.5">{c.avgNdvi}</p>
                     </div>
                     <div>
-                      <span className="text-slate-400">Reporting Farms:</span>
-                      <p className="font-bold text-white mt-0.5">{c.reportingFarms.toLocaleString()}</p>
+                      <span className="text-slate-500">Reporting Farms:</span>
+                      <p className="font-bold text-slate-900 mt-0.5">{c.reportingFarms.toLocaleString()}</p>
                     </div>
                   </div>
 
-                  <div className="p-3 rounded-lg bg-slate-900/80 border border-slate-800 text-xs">
-                    <span className="text-[11px] text-slate-400 block font-semibold">Primary Vulnerability:</span>
-                    <p className="text-slate-200 mt-0.5 leading-relaxed">{c.topVulnerability}</p>
+                  <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                    <span className="text-[11px] text-slate-500 block font-semibold">Primary Vulnerability:</span>
+                    <p className="text-slate-800 mt-0.5 leading-relaxed">{c.topVulnerability}</p>
                   </div>
                 </div>
               );
