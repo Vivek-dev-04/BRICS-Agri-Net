@@ -3,11 +3,54 @@
 import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { DEMO_SOIL } from "@/lib/mock-data";
+import { useFarm } from "@/context/FarmContext";
 import { FlaskConical, CheckCircle2, AlertCircle, Info, RefreshCw } from "lucide-react";
 
 export default function SoilHealthPage() {
-  const [soil, setSoil] = useState(DEMO_SOIL);
+  const { farm, soil: activeSoil } = useFarm();
   const [isEditing, setIsEditing] = useState(false);
+
+  // Synthesize reactive soil data from active farm
+  const soil = {
+    nitrogen: {
+      value: activeSoil?.nitrogen ?? DEMO_SOIL.nitrogen.value,
+      status: (activeSoil?.nitrogen ?? 180) > 220 ? "OPTIMAL" : "MEDIUM",
+      unit: "kg/ha",
+      optimal: "280-560",
+    },
+    phosphorus: {
+      value: activeSoil?.phosphorus ?? DEMO_SOIL.phosphorus.value,
+      status: (activeSoil?.phosphorus ?? 18) > 20 ? "OPTIMAL" : "MEDIUM",
+      unit: "kg/ha",
+      optimal: "15-25",
+    },
+    potassium: {
+      value: activeSoil?.potassium ?? DEMO_SOIL.potassium.value,
+      status: (activeSoil?.potassium ?? 310) > 250 ? "HIGH" : "OPTIMAL",
+      unit: "kg/ha",
+      optimal: "150-280",
+    },
+    ph: {
+      value: activeSoil?.ph ?? DEMO_SOIL.ph.value,
+      status: "OPTIMAL",
+      unit: "pH",
+      optimal: "6.5-7.5",
+    },
+    organicCarbon: {
+      value: activeSoil?.organicCarbon ?? DEMO_SOIL.organicCarbon.value,
+      status: (activeSoil?.organicCarbon ?? 0.42) > 0.6 ? "OPTIMAL" : "MODERATE",
+      unit: "%",
+      optimal: "> 0.75%",
+    },
+    moisture: {
+      value: activeSoil?.moisture ?? DEMO_SOIL.moisture.value,
+      status: (activeSoil?.moisture ?? 18.5) > 25 ? "ADEQUATE" : "DEFICIT",
+      unit: "%",
+      optimal: "25-35%",
+    },
+  };
+
+  const soilScore = activeSoil?.soilScore ?? 68;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -27,7 +70,7 @@ export default function SoilHealthPage() {
               Soil Health & Nutrient Profiling
             </h1>
             <p className="mt-0.5 text-xs text-slate-400">
-              Laboratory and field test evaluation of primary macronutrients (NPK), pH equilibrium, organic matter, and moisture.
+              Laboratory and field test evaluation of primary macronutrients (NPK), pH equilibrium, organic matter, and moisture for <strong className="text-emerald-400">{farm.name}</strong> ({farm.location}).
             </p>
           </div>
 
@@ -46,27 +89,27 @@ export default function SoilHealthPage() {
           <div>
             <span className="text-xs text-slate-400">Composite Soil Quality Index</span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-4xl font-extrabold text-white">68</span>
-              <span className="text-xs text-slate-400">/ 100 (Fair Condition)</span>
+              <span className="text-4xl font-extrabold text-white">{soilScore}</span>
+              <span className="text-xs text-slate-400">/ 100 ({soilScore >= 80 ? "Optimal Condition" : soilScore >= 70 ? "Good Condition" : "Fair Condition"})</span>
             </div>
-            <p className="text-xs text-amber-300 mt-2 flex items-center gap-1.5">
+            <p className="text-xs text-emerald-400 mt-2 flex items-center gap-1.5">
               <AlertCircle className="h-3.5 w-3.5" />
-              Sub-optimal available Nitrogen & low Organic Carbon limit yield potential
+              {activeSoil?.status ?? "Optimal NPK balance and nutrient availability"}
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
             <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
               <span className="text-slate-400">Soil Texture:</span>
-              <div className="font-semibold text-white mt-0.5">Loamy Sand</div>
+              <div className="font-semibold text-white mt-0.5">{farm.soilType}</div>
             </div>
             <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
               <span className="text-slate-400">pH Reaction:</span>
-              <div className="font-semibold text-emerald-400 mt-0.5">7.1 (Neutral / Optimal)</div>
+              <div className="font-semibold text-emerald-400 mt-0.5">{soil.ph.value} (Optimal)</div>
             </div>
             <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800">
-              <span className="text-slate-400">Test Date:</span>
-              <div className="font-semibold text-slate-200 mt-0.5">14 Oct 2026</div>
+              <span className="text-slate-400">GPS Telemetry:</span>
+              <div className="font-semibold text-slate-200 mt-0.5 font-mono text-[11px]">{farm.latitude.toFixed(2)}°N, {farm.longitude.toFixed(2)}°E</div>
             </div>
           </div>
         </div>
