@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Layers,
   Sparkles,
+  Search,
 } from "lucide-react";
 import { LanguageSelector, SupportedLanguage } from "./LanguageSelector";
 import { validateIndianMobile, validatePassword, registerFarmer } from "@/lib/auth/authService";
@@ -29,6 +30,7 @@ import {
   SoilInfo,
   RegionInfo,
 } from "@/lib/auth/soilGeoService";
+import { geocodeAddress, GeocodingResult } from "@/lib/services/geocodingService";
 import { useFarm } from "@/context/FarmContext";
 
 const PRESET_CROPS = [
@@ -182,16 +184,24 @@ export function RegisterForm() {
     lng: number;
   } | null>(null);
 
+  const [addressQuery, setAddressQuery] = useState("");
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geoResults, setGeoResults] = useState<GeocodingResult[]>([]);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [coordinatesSource, setCoordinatesSource] = useState<"address" | "gps" | "preset" | null>(null);
+  const [resolvedAddressName, setResolvedAddressName] = useState<string | null>(null);
+
   // Request browser GPS permission and infer soil & region
   const requestGpsLocation = () => {
     if (!navigator.geolocation) {
-      // Fallback coordinates for demonstration
       applyCoordinates(26.9124, 75.7873, 20);
+      setCoordinatesSource("preset");
       return;
     }
 
     setIsLocating(true);
     setGpsStatus("idle");
+    setGeoError(null);
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -199,6 +209,8 @@ export function RegisterForm() {
         const lng = position.coords.longitude;
         const acc = position.coords.accuracy;
         await applyCoordinates(lat, lng, acc);
+        setCoordinatesSource("gps");
+        setResolvedAddressName(null);
         setGpsStatus("granted");
         setIsLocating(false);
       },
@@ -213,6 +225,50 @@ export function RegisterForm() {
         maximumAge: 0,
       }
     );
+  };
+
+  // Detect coordinates from Farm Address, Village, or PIN Code
+  const handleAddressGeocode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = addressQuery.trim();
+    if (!query) {
+      setGeoError(
+        language === "hi"
+          ? "कृपया खेत का पता, गांव या 6 अंकों का पिन कोड दर्ज करें।"
+          : "Please enter farm address, village, or 6-digit PIN code."
+      );
+      return;
+    }
+
+    setIsGeocoding(true);
+    setGeoError(null);
+    setGeoResults([]);
+
+    const res = await geocodeAddress(query, "IN");
+    setIsGeocoding(false);
+
+    if (!res.success || res.results.length === 0) {
+      setGeoError(
+        language === "hi"
+          ? "सटीक स्थान नहीं मिला। आप पता बदल सकते हैं या डिवाइस GPS का उपयोग कर सकते हैं।"
+          : "Could not pinpoint exact location. You can adjust the address or use device GPS below."
+      );
+      return;
+    }
+
+    if (res.results.length === 1) {
+      const match = res.results[0];
+      await applyCoordinates(match.latitude, match.longitude);
+      setResolvedAddressName(match.displayName);
+      setCoordinatesSource("address");
+      setGeoResults([]);
+    } else {
+      setGeoResults(res.results);
+      const topMatch = res.results[0];
+      await applyCoordinates(topMatch.latitude, topMatch.longitude);
+      setResolvedAddressName(topMatch.displayName);
+      setCoordinatesSource("address");
+    }
   };
 
   // Helper to calculate soil and region from coordinates
@@ -231,13 +287,6 @@ export function RegisterForm() {
 
     if (errors.gps) setErrors((prev) => ({ ...prev, gps: "" }));
   };
-
-  // Auto-request GPS when the farmer navigates to Page 2
-  useEffect(() => {
-    if (currentPage === 2 && !latitude && typeof window !== "undefined") {
-      requestGpsLocation();
-    }
-  }, [currentPage]);
 
   // Handle Mobile input
   const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -525,35 +574,32 @@ export function RegisterForm() {
       <div className="mb-6">
         <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold mb-2">
           <div
-            className={`py-1.5 px-2 rounded-lg border transition-all ${
-              currentPage === 1
+            className={`py-1.5 px-2 rounded-lg border transition-all ${currentPage === 1
                 ? "bg-emerald-800 text-white border-emerald-800 shadow-xs"
                 : currentPage > 1
-                ? "bg-emerald-50 text-emerald-900 border-emerald-300"
-                : "bg-slate-50 text-slate-400 border-slate-200"
-            }`}
+                  ? "bg-emerald-50 text-emerald-900 border-emerald-300"
+                  : "bg-slate-50 text-slate-400 border-slate-200"
+              }`}
           >
             <span>1. Account</span>
           </div>
 
           <div
-            className={`py-1.5 px-2 rounded-lg border transition-all ${
-              currentPage === 2
+            className={`py-1.5 px-2 rounded-lg border transition-all ${currentPage === 2
                 ? "bg-emerald-800 text-white border-emerald-800 shadow-xs"
                 : currentPage > 2
-                ? "bg-emerald-50 text-emerald-900 border-emerald-300"
-                : "bg-slate-50 text-slate-400 border-slate-200"
-            }`}
+                  ? "bg-emerald-50 text-emerald-900 border-emerald-300"
+                  : "bg-slate-50 text-slate-400 border-slate-200"
+              }`}
           >
             <span>2. GPS & Soil</span>
           </div>
 
           <div
-            className={`py-1.5 px-2 rounded-lg border transition-all ${
-              currentPage === 3
+            className={`py-1.5 px-2 rounded-lg border transition-all ${currentPage === 3
                 ? "bg-emerald-800 text-white border-emerald-800 shadow-xs"
                 : "bg-slate-50 text-slate-400 border-slate-200"
-            }`}
+              }`}
           >
             <span>3. Crop & Land</span>
           </div>
@@ -718,50 +764,165 @@ export function RegisterForm() {
       {/* ========================================================================= */}
       {currentPage === 2 && (
         <div className="space-y-5 text-left animate-in fade-in duration-200">
-          {/* Main GPS Permission Action Card */}
-          <div className="p-4 rounded-xl border border-emerald-300 bg-emerald-50/80 space-y-3 shadow-xs">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex items-start gap-2.5">
-                <div className="p-2 rounded-lg bg-emerald-800 text-white shrink-0 mt-0.5">
-                  <Navigation className="h-5 w-5" />
+          {/* Dual Location Detection Box */}
+          <div className="p-4 rounded-xl border border-emerald-300 bg-emerald-50/80 space-y-3.5 shadow-xs">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-emerald-800" />
+                  <span>
+                    {language === "hi"
+                      ? "खेत का स्थान और मिट्टी वर्गीकरण"
+                      : "Farm Location & Soil Classification"}
+                  </span>
+                </h3>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {language === "hi"
+                    ? "सटीक GPS निर्देशांक और उपग्रह मिट्टी प्रोफाइल के लिए नीचे दिए गए किसी भी विकल्प का चयन करें।"
+                    : "Select either option below to pinpoint exact GPS coordinates and soil profile."}
+                </p>
+              </div>
+            </div>
+
+            {/* OPTION 1: Detect via Farm Address / Village / PIN Code */}
+            <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs space-y-2">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-800 text-[10px] text-white font-bold">
+                    1
+                  </span>
+                  <span>
+                    {language === "hi"
+                      ? "विकल्प A: खेत के पते या पिन कोड से GPS पहचानें"
+                      : "Option A: Detect via Farm Address, Village, or PIN Code"}
+                  </span>
+                </label>
+                <span className="text-[10px] text-slate-500 font-mono">e.g. 303702, Chomu, Jaipur</span>
+              </div>
+
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder={
+                      language === "hi"
+                        ? "गांव, तहसील, जिला या 6-अंकों का पिन कोड दर्ज करें..."
+                        : "Enter village, tehsil, district, or 6-digit PIN code..."
+                    }
+                    value={addressQuery}
+                    onChange={(e) => setAddressQuery(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddressGeocode();
+                      }
+                    }}
+                    className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 bg-white text-xs font-semibold text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-emerald-700"
+                  />
                 </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-900">
-                    {latitude && longitude
-                      ? "✓ GPS Location & Soil Telemetry Captured"
-                      : "Detect Farm Location via GPS"}
-                  </h3>
-                  <p className="text-xs text-slate-600 leading-relaxed mt-0.5">
-                    We use your device's GPS to bind satellite observations and automatically determine your farm's soil profile.
-                  </p>
+                <button
+                  type="button"
+                  onClick={() => handleAddressGeocode()}
+                  disabled={isGeocoding}
+                  className="px-3.5 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+                >
+                  {isGeocoding ? (
+                    <>
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      <span>{language === "hi" ? "खोज रहे हैं..." : "Detecting..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Search className="h-3.5 w-3.5" />
+                      <span>{language === "hi" ? "GPS खोजें" : "Detect GPS"}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Multiple Geocoding Suggestions */}
+              {geoResults.length > 1 && (
+                <div className="mt-2 space-y-1 rounded-lg border border-emerald-200 bg-emerald-50/60 p-2 max-h-32 overflow-y-auto">
+                  <span className="text-[10px] font-bold text-slate-500 block mb-1">
+                    {language === "hi"
+                      ? "कई स्थान मिले। सटीक खेत क्षेत्र चुनने के लिए क्लिक करें:"
+                      : "Multiple locations found. Click to select exact area:"}
+                  </span>
+                  {geoResults.map((r, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={async () => {
+                        await applyCoordinates(r.latitude, r.longitude);
+                        setResolvedAddressName(r.displayName);
+                        setCoordinatesSource("address");
+                        setGeoResults([]);
+                      }}
+                      className="w-full text-left p-1.5 rounded hover:bg-white text-xs text-slate-800 transition-colors flex items-start gap-1.5"
+                    >
+                      <MapPin className="h-3.5 w-3.5 text-emerald-700 shrink-0 mt-0.5" />
+                      <span className="line-clamp-1">{r.displayName}</span>
+                    </button>
+                  ))}
                 </div>
+              )}
+
+              {resolvedAddressName && coordinatesSource === "address" && (
+                <p className="text-[11px] text-emerald-800 font-medium flex items-center gap-1.5 pt-0.5">
+                  <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600 shrink-0" />
+                  <span className="line-clamp-1">
+                    {language === "hi" ? "पता निर्धारित:" : "Resolved Address:"} {resolvedAddressName}
+                  </span>
+                </p>
+              )}
+            </div>
+
+            {/* OPTION 2: Auto-Detect via Current Device GPS */}
+            <div className="bg-white rounded-xl p-3.5 border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="space-y-0.5">
+                <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                  <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-800 text-[10px] text-white font-bold">
+                    2
+                  </span>
+                  <span>
+                    {language === "hi"
+                      ? "विकल्प B: डिवाइस GPS सेंसर से ऑटो-डिटेक्ट करें"
+                      : "Option B: Auto-Detect via Current Device GPS"}
+                  </span>
+                </label>
+                <p className="text-[11px] text-slate-500">
+                  {language === "hi"
+                    ? "यदि आप वर्तमान में अपने खेत की भूमि पर मौजूद हैं तो सबसे उपयुक्त।"
+                    : "Ideal if you are currently standing on your farm parcel."}
+                </p>
               </div>
 
               <button
                 type="button"
                 onClick={requestGpsLocation}
                 disabled={isLocating}
-                className="px-3.5 py-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+                className="px-3.5 py-2 rounded-xl border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 disabled:opacity-50"
               >
                 {isLocating ? (
                   <>
-                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    <span>Detecting...</span>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-emerald-700" />
+                    <span>{t.gpsDetecting}</span>
                   </>
                 ) : (
                   <>
-                    <MapPin className="h-3.5 w-3.5" />
-                    <span>{latitude ? "Re-detect GPS" : t.gpsBtn}</span>
+                    <Navigation className="h-3.5 w-3.5 text-emerald-700" />
+                    <span>{latitude ? (language === "hi" ? "पुनः GPS लें" : "Re-detect GPS") : t.gpsBtn}</span>
                   </>
                 )}
               </button>
             </div>
 
-            {/* In-Flight Detecting State */}
-            {isLocating && (
-              <div className="p-3 bg-white/80 rounded-lg border border-emerald-200 flex items-center gap-2 text-xs text-emerald-900 font-medium animate-pulse">
-                <Loader2 className="h-4 w-4 animate-spin text-emerald-700" />
-                <span>{t.gpsDetecting}</span>
+            {/* Geocode Error Message */}
+            {geoError && (
+              <div className="p-3 bg-amber-50 rounded-lg border border-amber-200 text-xs text-amber-900 flex items-center gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-700 shrink-0" />
+                <span>{geoError}</span>
               </div>
             )}
 
@@ -775,7 +936,10 @@ export function RegisterForm() {
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
-                    onClick={() => applyCoordinates(26.9124, 75.7873, 25)}
+                    onClick={() => {
+                      applyCoordinates(26.9124, 75.7873, 25);
+                      setCoordinatesSource("preset");
+                    }}
                     className="px-2.5 py-1 bg-amber-200/70 hover:bg-amber-200 text-amber-950 font-bold rounded text-[11px] transition-colors"
                   >
                     📍 Use Default National Agro-Grid Coordinates (26.91°N, 75.78°E)
@@ -786,19 +950,22 @@ export function RegisterForm() {
 
             {/* Live GPS Coordinates Display */}
             {latitude && longitude && (
-              <div className="p-3 bg-white rounded-lg border border-emerald-200 space-y-2">
+              <div className="p-3 bg-white rounded-lg border border-emerald-300 space-y-1.5">
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div className="flex items-center gap-1.5 font-mono font-bold text-emerald-900">
-                    <Check className="h-3.5 w-3.5 text-emerald-600" />
+                  <div className="flex items-center gap-1.5 font-mono font-bold text-emerald-950">
+                    <Compass className="h-3.5 w-3.5 text-emerald-700" />
                     <span>Latitude: {latitude.toFixed(5)}° N</span>
                     <span className="text-slate-300">|</span>
                     <span>Longitude: {longitude.toFixed(5)}° E</span>
                   </div>
-                  {gpsAccuracy && (
-                    <span className="text-[10px] text-slate-500 font-medium">
-                      (GPS Accuracy: ±{Math.round(gpsAccuracy)}m)
-                    </span>
-                  )}
+                  <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                    {coordinatesSource === "address"
+                      ? (language === "hi" ? "पते से पहचाना गया" : "Detected from Address")
+                      : coordinatesSource === "gps"
+                      ? (language === "hi" ? "डिवाइस GPS से प्राप्त" : "Captured via Device GPS")
+                      : "Agro-Grid Coordinate"}
+                  </span>
                 </div>
               </div>
             )}
@@ -930,11 +1097,10 @@ export function RegisterForm() {
                     setAreaAcres(ac);
                     if (errors.areaAcres) setErrors((prev) => ({ ...prev, areaAcres: "" }));
                   }}
-                  className={`px-2 py-0.5 text-xs rounded-md border font-medium transition-colors ${
-                    areaAcres === ac
+                  className={`px-2 py-0.5 text-xs rounded-md border font-medium transition-colors ${areaAcres === ac
                       ? "bg-emerald-800 text-white border-emerald-800"
                       : "bg-white text-slate-700 border-slate-300 hover:bg-slate-100"
-                  }`}
+                    }`}
                 >
                   {ac} Ac
                 </button>
@@ -974,11 +1140,10 @@ export function RegisterForm() {
                       setIsCustomCropSelected(false);
                       if (errors.crop) setErrors((prev) => ({ ...prev, crop: "" }));
                     }}
-                    className={`p-2 rounded-xl border text-left text-xs font-medium transition-all flex flex-col gap-1 items-start ${
-                      isSelected
+                    className={`p-2 rounded-xl border text-left text-xs font-medium transition-all flex flex-col gap-1 items-start ${isSelected
                         ? "bg-emerald-100/80 border-emerald-700 text-emerald-950 font-bold ring-2 ring-emerald-700/30 shadow-xs"
                         : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                    }`}
+                      }`}
                   >
                     <span className="text-base">{cr.emoji}</span>
                     <span className="line-clamp-1 leading-tight text-[11px]">
@@ -999,11 +1164,10 @@ export function RegisterForm() {
                     if (customCrop.trim()) setCrop(customCrop.trim());
                     else setCrop("");
                   }}
-                  className={`px-3 py-2 text-xs rounded-xl border font-bold shrink-0 transition-colors ${
-                    isCustomCropSelected
+                  className={`px-3 py-2 text-xs rounded-xl border font-bold shrink-0 transition-colors ${isCustomCropSelected
                       ? "bg-emerald-800 text-white border-emerald-800"
                       : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50"
-                  }`}
+                    }`}
                 >
                   {t.customCropBtn}
                 </button>

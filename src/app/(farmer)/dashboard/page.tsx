@@ -19,6 +19,7 @@ import {
   FlaskConical,
   Leaf,
   MapPin,
+  Plus,
   Satellite,
   ShieldAlert,
   Sparkles,
@@ -26,10 +27,12 @@ import {
   TrendingDown,
   Info,
 } from "lucide-react";
+import { AddFarmModal } from "@/components/farmer/AddFarmModal";
 
 export default function DashboardPage() {
   const { farm, user, soil } = useFarm();
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isAddFarmOpen, setIsAddFarmOpen] = useState(false);
 
   useEffect(() => {
     const lat = farm.latitude || 26.9124;
@@ -95,6 +98,14 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsAddFarmOpen(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-900 hover:bg-emerald-100 transition-colors shadow-2xs"
+              >
+                <Plus className="h-3.5 w-3.5 text-emerald-700" />
+                <span>+ Register New Farm</span>
+              </button>
               <Link
                 href="/advisory"
                 className="flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm"
@@ -445,6 +456,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Register New Farm Parcel Modal */}
+      <AddFarmModal isOpen={isAddFarmOpen} onClose={() => setIsAddFarmOpen(false)} />
     </div>
   );
 }

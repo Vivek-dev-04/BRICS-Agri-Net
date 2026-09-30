@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { useFarm } from "@/context/FarmContext";
 import { inferSoilFromCoordinates } from "@/lib/auth/soilGeoService";
+import { geocodeAddress, GeocodingResult } from "@/lib/services/geocodingService";
 import {
   Sprout,
   MapPin,
@@ -22,6 +23,9 @@ import {
   Layers3,
   X,
   Compass,
+  Search,
+  Loader2,
+  Sparkles,
 } from "lucide-react";
 
 export default function FarmsPage() {
@@ -43,7 +47,13 @@ export default function FarmsPage() {
   const [longitude, setLongitude] = useState<number>(75.7873);
   const [sowingDate, setSowingDate] = useState<string>(new Date().toISOString().split("T")[0]);
 
-  // GPS Auto-Detection for new plot
+  const [addressQuery, setAddressQuery] = useState("");
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [geoResults, setGeoResults] = useState<GeocodingResult[]>([]);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [coordsSource, setCoordsSource] = useState<"address" | "gps" | "default">("default");
+
+  // GPS Auto-Detection for new plot (Option B: Device GPS)
   const handleDetectGPS = () => {
     if (typeof window === "undefined" || !navigator.geolocation) {
       alert("Geolocation is not supported by your browser.");
@@ -51,12 +61,14 @@ export default function FarmsPage() {
     }
 
     setLocating(true);
+    setGeoError(null);
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const lat = pos.coords.latitude;
         const lon = pos.coords.longitude;
         setLatitude(lat);
         setLongitude(lon);
+        setCoordsSource("gps");
 
         // Auto-infer realistic regional soil classification from GPS
         const soilInfo = inferSoilFromCoordinates(lat, lon);
@@ -67,10 +79,52 @@ export default function FarmsPage() {
       (err) => {
         console.warn("GPS error:", err);
         setLocating(false);
-        alert("Could not detect GPS location. You can enter location coordinates manually.");
+        setGeoError("Could not detect device GPS location. You can enter address or PIN code instead.");
       },
-      { timeout: 8000 }
+      { timeout: 9000, enableHighAccuracy: true }
     );
+  };
+
+  // Address Geocoding Auto-Detection (Option A: Exact Address / PIN Code)
+  const handleAddressGeocode = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const query = addressQuery.trim() || location.trim();
+    if (!query) {
+      setGeoError("Please enter village, tehsil, district, or 6-digit PIN code.");
+      return;
+    }
+
+    setIsGeocoding(true);
+    setGeoError(null);
+    setGeoResults([]);
+
+    const res = await geocodeAddress(query, country);
+    setIsGeocoding(false);
+
+    if (!res.success || res.results.length === 0) {
+      setGeoError("Could not pinpoint exact location. You can refine the address or use device GPS below.");
+      return;
+    }
+
+    if (res.results.length === 1) {
+      const match = res.results[0];
+      setLatitude(match.latitude);
+      setLongitude(match.longitude);
+      setLocation(match.displayName);
+      const soilInfo = inferSoilFromCoordinates(match.latitude, match.longitude);
+      setSoilType(soilInfo.soilType);
+      setCoordsSource("address");
+      setGeoResults([]);
+    } else {
+      setGeoResults(res.results);
+      const topMatch = res.results[0];
+      setLatitude(topMatch.latitude);
+      setLongitude(topMatch.longitude);
+      setLocation(topMatch.displayName);
+      const soilInfo = inferSoilFromCoordinates(topMatch.latitude, topMatch.longitude);
+      setSoilType(soilInfo.soilType);
+      setCoordsSource("address");
+    }
   };
 
   const handleCreateFarm = (e: React.FormEvent) => {
@@ -355,24 +409,159 @@ export default function FarmsPage() {
               </div>
             </div>
 
-            {/* GPS Detection Bar */}
-            <div className="rounded-lg bg-white p-3 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 text-slate-700">
-                <Compass className="h-4 w-4 text-emerald-700 shrink-0" />
-                <span>
-                  GPS Coordinates: <strong className="font-mono text-slate-900">{latitude.toFixed(4)}°N, {longitude.toFixed(4)}°E</strong>
+            {/* DUAL LOCATION DETECTION BOX: Option A (Address/PIN) & Option B (Device GPS) */}
+            <div className="rounded-xl border border-emerald-300 bg-white p-4 space-y-3 shadow-2xs">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-emerald-800" />
+                  <span className="text-xs font-bold text-emerald-950 uppercase tracking-wide">
+                    GPS Coordinates & Soil Classification Detection
+                  </span>
+                </div>
+                <span className="text-[11px] font-semibold text-emerald-800">
+                  Select either method below
                 </span>
               </div>
 
-              <button
-                type="button"
-                onClick={handleDetectGPS}
-                disabled={locating}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-800 font-semibold transition-colors disabled:opacity-50"
-              >
-                <Navigation className={`h-3.5 w-3.5 text-emerald-700 ${locating ? "animate-spin" : ""}`} />
-                <span>{locating ? "Detecting Satellite GPS..." : "Auto-Detect Plot GPS"}</span>
-              </button>
+              {/* Option A: Search Exact Farm Address / PIN Code */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-800 text-[10px] text-white font-bold">
+                      1
+                    </span>
+                    <span>Option A: Detect via Farm Address, Village, or PIN Code</span>
+                  </label>
+                  <span className="text-[10px] text-slate-500">e.g. 303702 or Chomu, Jaipur</span>
+                </div>
+
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Enter village, tehsil, district, or 6-digit postal PIN..."
+                      value={addressQuery}
+                      onChange={(e) => {
+                        setAddressQuery(e.target.value);
+                        if (e.target.value) setLocation(e.target.value);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddressGeocode();
+                        }
+                      }}
+                      className="gov-input pl-8 text-xs"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleAddressGeocode()}
+                    disabled={isGeocoding}
+                    className="px-3.5 py-1.5 rounded-lg bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+                  >
+                    {isGeocoding ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        <span>Detecting...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Search className="h-3.5 w-3.5" />
+                        <span>Detect GPS</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                {/* Multiple geocoding suggestions */}
+                {geoResults.length > 1 && (
+                  <div className="space-y-1 rounded border border-emerald-200 bg-emerald-50/50 p-2 max-h-28 overflow-y-auto">
+                    <span className="text-[10px] font-bold text-slate-500 block mb-0.5">
+                      Multiple locations found. Click to select exact parcel:
+                    </span>
+                    {geoResults.map((r, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setLatitude(r.latitude);
+                          setLongitude(r.longitude);
+                          setLocation(r.displayName);
+                          const s = inferSoilFromCoordinates(r.latitude, r.longitude);
+                          setSoilType(s.soilType);
+                          setCoordsSource("address");
+                          setGeoResults([]);
+                        }}
+                        className="w-full text-left p-1 rounded hover:bg-white text-xs text-slate-800 transition-colors flex items-start gap-1"
+                      >
+                        <MapPin className="h-3 w-3 text-emerald-700 shrink-0 mt-0.5" />
+                        <span className="line-clamp-1">{r.displayName}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Option B: Current Device GPS */}
+              <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="space-y-0.5">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span className="inline-flex items-center justify-center h-4 w-4 rounded-full bg-emerald-800 text-[10px] text-white font-bold">
+                      2
+                    </span>
+                    <span>Option B: Auto-Detect via Current Device GPS</span>
+                  </label>
+                  <p className="text-[11px] text-slate-500">
+                    Use when physically standing at the farm land parcel.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleDetectGPS}
+                  disabled={locating}
+                  className="px-3.5 py-1.5 rounded-lg border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 disabled:opacity-50"
+                >
+                  <Navigation className={`h-3.5 w-3.5 text-emerald-700 ${locating ? "animate-spin" : ""}`} />
+                  <span>{locating ? "Detecting GPS..." : "Auto-Detect Plot GPS"}</span>
+                </button>
+              </div>
+
+              {/* Error Notice */}
+              {geoError && (
+                <p className="text-xs text-amber-800 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                  {geoError}
+                </p>
+              )}
+
+              {/* Live Coordinates & Auto-Inferred Soil Strip */}
+              <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                <div className="flex items-center gap-2 text-slate-800">
+                  <Compass className="h-4 w-4 text-emerald-700 shrink-0" />
+                  <span>
+                    Captured GPS:{" "}
+                    <strong className="font-mono text-emerald-950">
+                      {latitude.toFixed(4)}°N, {longitude.toFixed(4)}°E
+                    </strong>
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800 border border-emerald-200">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                    {coordsSource === "address"
+                      ? "Detected from Address"
+                      : coordsSource === "gps"
+                      ? "Captured from Device GPS"
+                      : "Preset Agro Coordinates"}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 text-xs text-slate-700">
+                  <Layers className="h-3.5 w-3.5 text-emerald-700" />
+                  <span>Auto Soil:</span>
+                  <strong className="text-emerald-900">{soilType}</strong>
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end gap-2 pt-2 border-t border-emerald-200">
@@ -420,11 +609,10 @@ export default function FarmsPage() {
                 <div
                   key={f.id}
                   onClick={() => handleSelectFarmAndGoToStats(f.id)}
-                  className={`gov-card p-5 border transition-all cursor-pointer flex flex-col justify-between group hover:shadow-lg hover:-translate-y-0.5 ${
-                    isActive
+                  className={`gov-card p-5 border transition-all cursor-pointer flex flex-col justify-between group hover:shadow-lg hover:-translate-y-0.5 ${isActive
                       ? "border-emerald-700 ring-2 ring-emerald-700/80 bg-white shadow-md"
                       : "border-slate-200 bg-white hover:border-emerald-500"
-                  }`}
+                    }`}
                 >
                   <div>
                     {/* Top Card Header */}
@@ -505,11 +693,10 @@ export default function FarmsPage() {
                         e.stopPropagation();
                         handleSelectFarmAndGoToStats(f.id);
                       }}
-                      className={`w-full flex items-center justify-center gap-1.5 rounded-lg py-2.5 px-4 text-xs font-bold transition-all shadow-sm ${
-                        isActive
+                      className={`w-full flex items-center justify-center gap-1.5 rounded-lg py-2.5 px-4 text-xs font-bold transition-all shadow-sm ${isActive
                           ? "bg-emerald-800 hover:bg-emerald-700 text-white"
                           : "bg-slate-100 hover:bg-emerald-800 hover:text-white text-slate-800"
-                      }`}
+                        }`}
                     >
                       <Activity className="h-3.5 w-3.5" />
                       <span>View Farm Stats & Analytics</span>
