@@ -57,6 +57,7 @@ export interface CropRecommendationParams {
   ndvi?: number;
   season?: string;
   priorityGoal?: "Balanced" | "Maximum Profit" | "Water Conservation" | "Soil Restoration";
+  language?: string;
 }
 
 export async function generateCropRecommendations(
@@ -122,6 +123,7 @@ TASK:
 2. Recommend exactly 3 to 4 best-suited crops that the farmer can plant next, ordered by suitability score.
 3. Include at least one climate-resilient alternative or nitrogen-fixing legume to ensure sustainable regenerative agriculture.
 4. Keep all descriptions concise, practical, and directly actionable for small and marginal farmers.
+5. Provide all analysis text, reasoning, and descriptions in ${params.language || "English"}.
 
 RETURN STRICTLY A RAW JSON OBJECT (NO CODE BLOCKS, NO MARKDOWN WRAPPERS):
 {

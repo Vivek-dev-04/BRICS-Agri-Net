@@ -32,6 +32,7 @@ import {
 } from "@/lib/auth/soilGeoService";
 import { geocodeAddress, GeocodingResult } from "@/lib/services/geocodingService";
 import { useFarm } from "@/context/FarmContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { localDb } from "@/lib/db/localStorageDb";
 
 const PRESET_CROPS = [
@@ -54,7 +55,46 @@ const IRRIGATION_TYPES = [
   { id: "Rainfed", labelEn: "Rainfed (Monsoon Dependent)", labelHi: "वर्षा आधारित (मानसून)" },
 ];
 
-const TRANSLATIONS = {
+const TRANSLATIONS: Record<SupportedLanguage, {
+  badge: string;
+  step1Title: string;
+  step1Subtitle: string;
+  step2Title: string;
+  step2Subtitle: string;
+  step3Title: string;
+  step3Subtitle: string;
+  nameLabel: string;
+  namePlaceholder: string;
+  mobileLabel: string;
+  mobilePlaceholder: string;
+  passwordLabel: string;
+  passwordPlaceholder: string;
+  confirmPasswordLabel: string;
+  confirmPasswordPlaceholder: string;
+  gpsBtn: string;
+  gpsDetecting: string;
+  gpsGranted: string;
+  gpsDenied: string;
+  autoRegionLabel: string;
+  autoSoilLabel: string;
+  autoSoilSubtitle: string;
+  areaLabel: string;
+  areaPlaceholder: string;
+  cropLabel: string;
+  customCropBtn: string;
+  customCropPlaceholder: string;
+  irrigationLabel: string;
+  btnNext: string;
+  btnBack: string;
+  btnSubmit: string;
+  submitting: string;
+  alreadyRegistered: string;
+  signInLink: string;
+  successTitle: string;
+  successSubtitle: string;
+  goToDashboard: string;
+  goToLogin: string;
+}> = {
   en: {
     badge: "Official Farmer Registration",
     step1Title: "1. Farmer Account",
@@ -135,14 +175,133 @@ const TRANSLATIONS = {
     goToDashboard: "खेत डैशबोर्ड पर जाएं",
     goToLogin: "लॉगिन पर वापस जाएं",
   },
+  pt: {
+    badge: "Registro Oficial de Produtor Rural",
+    step1Title: "1. Conta do Produtor",
+    step1Subtitle: "Crie suas credenciais para acessar orientações de IA e telemetria.",
+    step2Title: "2. Telemetria GPS e Solo",
+    step2Subtitle: "Permita a localização GPS para identificar sua região e classificação do solo.",
+    step3Title: "3. Cultura e Área",
+    step3Subtitle: "Informe o que você cultiva para personalizar a inteligência agronômica.",
+    nameLabel: "Nome Completo do Produtor",
+    namePlaceholder: "Digite seu nome completo",
+    mobileLabel: "Número de Celular",
+    mobilePlaceholder: "Número de celular com DDD",
+    passwordLabel: "Senha",
+    passwordPlaceholder: "Mínimo de 6 caracteres",
+    confirmPasswordLabel: "Confirmar Senha",
+    confirmPasswordPlaceholder: "Digite a senha novamente",
+    gpsBtn: "Detectar Localização e Solo via GPS",
+    gpsDetecting: "Solicitando permissão de localização do navegador...",
+    gpsGranted: "Telemetria GPS e Classificação de Solo Verificadas",
+    gpsDenied: "Permissão de localização negada. Tente novamente ou use coordenadas.",
+    autoRegionLabel: "Região e Zona Agroclimática Identificadas",
+    autoSoilLabel: "Classificação Automatizada do Solo",
+    autoSoilSubtitle: "Calculado a partir das coordenadas geográficas da sua fazenda",
+    areaLabel: "Tamanho da Propriedade (em Acres)",
+    areaPlaceholder: "ex.: 4.5",
+    cropLabel: "Qual Cultura Principal Você Cultiva?",
+    customCropBtn: "Outra Cultura",
+    customCropPlaceholder: "Digite o nome da cultura...",
+    irrigationLabel: "Principal Fonte de Irrigação",
+    btnNext: "Continuar para a Próxima Etapa",
+    btnBack: "Voltar",
+    btnSubmit: "Concluir Cadastro da Fazenda",
+    submitting: "Enviando cadastro da propriedade...",
+    alreadyRegistered: "Já possui cadastro?",
+    signInLink: "Faça login aqui",
+    successTitle: "Propriedade Cadastrada com Sucesso!",
+    successSubtitle: "Sua fazenda foi cadastrada com telemetria GPS automatizada e análise de solo por satélite.",
+    goToDashboard: "Ir para o Painel da Fazenda",
+    goToLogin: "Voltar para Login",
+  },
+  ru: {
+    badge: "Официальная регистрация фермера",
+    step1Title: "1. Учетная запись фермера",
+    step1Subtitle: "Создайте учетные данные для доступа к ИИ-агроконсультациям и телеметрии.",
+    step2Title: "2. GPS-телеметрия и почва",
+    step2Subtitle: "Разрешите доступ к GPS для автоматического определения региона и типа почвы.",
+    step3Title: "3. Культура и площадь",
+    step3Subtitle: "Укажите возделываемую культуру для персонализации агрономических моделей.",
+    nameLabel: "Полное имя фермера",
+    namePlaceholder: "Введите ваше ФИО",
+    mobileLabel: "Номер мобильного телефона",
+    mobilePlaceholder: "10-значный номер телефона",
+    passwordLabel: "Пароль",
+    passwordPlaceholder: "Не менее 6 символов",
+    confirmPasswordLabel: "Подтвердите пароль",
+    confirmPasswordPlaceholder: "Повторите пароль",
+    gpsBtn: "Определить местоположение и почву по GPS",
+    gpsDetecting: "Запрос разрешения геолокации в браузере...",
+    gpsGranted: "GPS-телеметрия и классификация почвы подтверждены",
+    gpsDenied: "В доступе к геолокации отказано. Повторите попытку или введите координаты.",
+    autoRegionLabel: "Определенная агроклиматическая зона",
+    autoSoilLabel: "Автоматическая классификация почвы",
+    autoSoilSubtitle: "Рассчитано на основе географических координат вашего участка",
+    areaLabel: "Площадь участка (в акрах)",
+    areaPlaceholder: "напр., 4.5",
+    cropLabel: "Какую основную культуру вы выращиваете?",
+    customCropBtn: "Другая культура",
+    customCropPlaceholder: "Введите название культуры...",
+    irrigationLabel: "Основной источник орошения",
+    btnNext: "Перейти к следующему шагу",
+    btnBack: "Назад",
+    btnSubmit: "Завершить регистрацию фермы" ,
+    submitting: "Регистрация участка...",
+    alreadyRegistered: "Уже зарегистрированы?",
+    signInLink: "Войти здесь",
+    successTitle: "Ферма успешно зарегистрирована!",
+    successSubtitle: "Ваш участок зарегистрирован с автоматической GPS-телеметрией и спутниковым анализом почвы.",
+    goToDashboard: "Перейти в панель фермы",
+    goToLogin: "Вернуться ко входу",
+  },
+  zh: {
+    badge: "金砖国家农业示范农户官方注册",
+    step1Title: "1. 农户身份信息",
+    step1Subtitle: "创建安全账户，获取AI农业决策支持与气象遥感服务。",
+    step2Title: "2. GPS定位与土壤遥感",
+    step2Subtitle: "授权GPS定位，自动匹配农场气候区划与土壤分类体系。",
+    step3Title: "3. 作物品种与种植面积",
+    step3Subtitle: "填写主营作物信息，以便系统提供定制化种植与植保决策方案。",
+    nameLabel: "农户姓名",
+    namePlaceholder: "请输入您的姓名",
+    mobileLabel: "手机号码",
+    mobilePlaceholder: "请输入手机号码",
+    passwordLabel: "登录密码",
+    passwordPlaceholder: "至少6位字符",
+    confirmPasswordLabel: "确认密码",
+    confirmPasswordPlaceholder: "请再次输入密码",
+    gpsBtn: "通过GPS一键获取位置与土壤分类",
+    gpsDetecting: "正在请求浏览器地理位置权限...",
+    gpsGranted: "已完成GPS定位与卫星土壤分类验证",
+    gpsDenied: "定位权限被拒绝，请重试或手动输入坐标。",
+    autoRegionLabel: "系统识别农林气候区",
+    autoSoilLabel: "自动化土壤分类结果",
+    autoSoilSubtitle: "根据您农场地块的地理坐标遥感自动解译",
+    areaLabel: "农场地块面积（英亩）",
+    areaPlaceholder: "例如：4.5",
+    cropLabel: "您的主要种植作物是什么？",
+    customCropBtn: "其他作物",
+    customCropPlaceholder: "请输入作物品种名称...",
+    irrigationLabel: "主要灌溉水源与方式",
+    btnNext: "继续下一步",
+    btnBack: "返回上一步",
+    btnSubmit: "完成农场注册",
+    submitting: "正在提交农场注册信息...",
+    alreadyRegistered: "已有农场账户？",
+    signInLink: "由此登录",
+    successTitle: "农场注册成功！",
+    successSubtitle: "您的地块已成功开通，已接入高分辨率GPS与土壤遥感监测网络。",
+    goToDashboard: "进入农场管理面板",
+    goToLogin: "返回登录",
+  },
 };
 
 export function RegisterForm() {
   const router = useRouter();
   const { register: registerInContext } = useFarm();
-
-  const [language, setLanguage] = useState<SupportedLanguage>("en");
-  const t = TRANSLATIONS[language];
+  const { language, setLanguage } = useLanguage();
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   // Multi-Page Wizard: Step 1, Step 2, Step 3, or Step 4 (Success)
   const [currentPage, setCurrentPage] = useState<1 | 2 | 3 | 4>(1);

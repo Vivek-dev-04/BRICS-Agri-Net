@@ -61,6 +61,7 @@ export async function POST(request: Request) {
       ndvi,
       season,
       priorityGoal,
+      language: body.language || "English",
     };
 
     const result = await generateCropRecommendations(params);

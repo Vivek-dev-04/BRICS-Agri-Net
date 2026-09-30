@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Navbar } from "@/components/Navbar";
 import { useFarm } from "@/context/FarmContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { inferSoilFromCoordinates } from "@/lib/auth/soilGeoService";
 import { geocodeAddress, GeocodingResult } from "@/lib/services/geocodingService";
 import {
@@ -31,6 +32,7 @@ import {
 export default function FarmsPage() {
   const router = useRouter();
   const { user, farm: activeFarm, farms, addFarm, switchFarm, deleteFarm } = useFarm();
+  const { t } = useLanguage();
   const [isCreating, setIsCreating] = useState(false);
   const [locating, setLocating] = useState(false);
 
@@ -205,7 +207,7 @@ export default function FarmsPage() {
               className="flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm"
             >
               <Plus className="h-4 w-4" />
-              <span>{isCreating ? "Close Form" : "Add New Farm Parcel"}</span>
+              <span>{isCreating ? t.common.close : "+ Add Farm Parcel"}</span>
             </button>
           </div>
         </div>
