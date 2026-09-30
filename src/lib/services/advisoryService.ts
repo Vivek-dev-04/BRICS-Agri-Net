@@ -39,7 +39,7 @@ export interface AgroAdvisoryResult {
     urgency: "Proactive" | "Recommended" | "Essential";
     recommendation: string;
   };
-  engine: "gemini-1.5-flash" | "agronomic-rule-engine";
+  engine: "gemini-2.5-flash" | "gemini-1.5-flash" | "agronomic-rule-engine";
   language: string;
   summaryHighlights?: string[];
 }
@@ -147,77 +147,89 @@ RETURN STRICTLY A JSON OBJECT WITH THIS EXACT SCHEMA (NO MARKDOWN WRAPPERS, NO C
 }
 `;
 
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  const candidateModels = ["gemini-2.5-flash", "gemini-flash-latest", "gemini-1.5-flash"];
 
-  try {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      signal: controller.signal,
-      body: JSON.stringify({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: prompt }],
+  for (const model of candidateModels) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controller.signal,
+        body: JSON.stringify({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
+            topP: 0.8,
+            maxOutputTokens: 1024,
+            responseMimeType: "application/json",
+            thinkingConfig: {
+              thinkingBudget: 0,
+            },
           },
-        ],
-        generationConfig: {
-          temperature: 0.2,
-          topP: 0.8,
-          maxOutputTokens: 1024,
-          responseMimeType: "application/json",
+        }),
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Model not found in this region/key tier, try next candidate
+          continue;
+        }
+        const errText = await response.text();
+        console.warn(`Gemini API HTTP Error ${response.status} with model ${model}: ${errText}`);
+        continue;
+      }
+
+      const data = await response.json();
+      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+      if (!rawText) continue;
+
+      // Clean potential markdown quotes
+      const cleaned = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
+      const parsed = JSON.parse(cleaned);
+
+      return {
+        id: `adv-gemini-${Date.now().toString().slice(-6)}`,
+        generatedAt: new Date().toISOString(),
+        crop: `${farm.crop}${farm.cropVariety ? ` (${farm.cropVariety})` : ""}`,
+        cropHealthStatus: parsed.cropHealthStatus || "AI Analysis Completed",
+        irrigation: {
+          urgency: parsed.irrigation?.urgency || "Moderate",
+          recommendation: parsed.irrigation?.recommendation || "Maintain scheduled irrigation.",
         },
-      }),
-    });
-
-    clearTimeout(timeoutId);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.warn(`Gemini API HTTP Error ${response.status}: ${errText}`);
-      return null;
+        soil: {
+          urgency: parsed.soil?.urgency || "Medium",
+          recommendation: parsed.soil?.recommendation || "Apply recommended organic amendments.",
+        },
+        diseaseRisk: {
+          urgency: parsed.diseaseRisk?.urgency || "Low",
+          recommendation: parsed.diseaseRisk?.recommendation || "Continue field scouting.",
+        },
+        regenerative: {
+          urgency: parsed.regenerative?.urgency || "Recommended",
+          recommendation: parsed.regenerative?.recommendation || "Adopt residue mulching.",
+        },
+        engine: model === "gemini-1.5-flash" ? "gemini-1.5-flash" : "gemini-2.5-flash",
+        language,
+      };
+    } catch (err) {
+      clearTimeout(timeoutId);
+      console.warn(`Gemini fetch error with model ${model}:`, err);
     }
-
-    const data = await response.json();
-    const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-
-    if (!rawText) return null;
-
-    // Clean potential markdown quotes
-    const cleaned = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
-    const parsed = JSON.parse(cleaned);
-
-    return {
-      id: `adv-gemini-${Date.now().toString().slice(-6)}`,
-      generatedAt: new Date().toISOString(),
-      crop: `${farm.crop}${farm.cropVariety ? ` (${farm.cropVariety})` : ""}`,
-      cropHealthStatus: parsed.cropHealthStatus || "AI Analysis Completed",
-      irrigation: {
-        urgency: parsed.irrigation?.urgency || "Moderate",
-        recommendation: parsed.irrigation?.recommendation || "Maintain scheduled irrigation.",
-      },
-      soil: {
-        urgency: parsed.soil?.urgency || "Medium",
-        recommendation: parsed.soil?.recommendation || "Apply recommended organic amendments.",
-      },
-      diseaseRisk: {
-        urgency: parsed.diseaseRisk?.urgency || "Low",
-        recommendation: parsed.diseaseRisk?.recommendation || "Continue field scouting.",
-      },
-      regenerative: {
-        urgency: parsed.regenerative?.urgency || "Recommended",
-        recommendation: parsed.regenerative?.recommendation || "Adopt residue mulching.",
-      },
-      engine: "gemini-1.5-flash",
-      language,
-    };
-  } catch (err) {
-    clearTimeout(timeoutId);
-    console.warn("Gemini fetch error:", err);
-    return null;
   }
+
+  return null;
 }
 
 /**

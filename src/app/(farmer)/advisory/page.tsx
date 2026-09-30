@@ -174,9 +174,9 @@ export default function AdvisoryPage() {
         {/* Engine Telemetry Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-slate-800 bg-slate-900/60 text-xs">
           <div className="flex items-center gap-2">
-            {advisory?.engine === "gemini-1.5-flash" ? (
+            {advisory?.engine?.startsWith("gemini") ? (
               <span className="flex items-center gap-1.5 text-emerald-400 font-semibold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
-                <Bot className="h-4 w-4" /> Live LLM Reasoning Active: Google Gemini 1.5 Flash
+                <Bot className="h-4 w-4" /> Live LLM Reasoning Active: Google Gemini AI ({advisory.engine.replace("gemini-", "").replace("-flash", " Flash")})
               </span>
             ) : (
               <span className="flex items-center gap-1.5 text-teal-300 font-semibold bg-teal-500/10 px-2.5 py-1 rounded-md border border-teal-500/30">
@@ -244,7 +244,7 @@ export default function AdvisoryPage() {
             <div className="p-2.5 rounded-lg bg-slate-900 border border-slate-800">
               <span className="text-slate-400 block text-[11px]">🤖 AI Reasoning:</span>
               <strong className="text-emerald-400">
-                {advisory?.engine === "gemini-1.5-flash" ? "Gemini 1.5 Flash" : "Agronomic Engine"}
+                {advisory?.engine?.startsWith("gemini") ? "Google Gemini AI" : "Agronomic Engine"}
               </strong>
               <div className="text-[10px] text-slate-400">Latency: {isSynthesizing ? "Computing..." : "< 500ms"}</div>
             </div>
