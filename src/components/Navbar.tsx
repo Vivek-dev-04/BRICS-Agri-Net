@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sprout, LayoutDashboard, Globe2, User, LogOut, ArrowRight, Database, Compass } from "lucide-react";
+import { Sprout, LayoutDashboard, Globe2, User, LogOut, ArrowRight, Database, Compass, ScanEye, Code2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFarm } from "@/context/FarmContext";
 
@@ -27,7 +27,8 @@ export function Navbar() {
   const navLinks = [
     { name: "My Farms", href: "/farms", icon: Sprout },
     { name: "Crop Planner", href: "/crop-planner", icon: Compass },
-    { name: "BRICS Network", href: "/brics-network", icon: Globe2 },
+    { name: "Disease Diagnostics", href: "/disease", icon: ScanEye },
+    { name: "BRICS Commons & Models", href: "/brics-network", icon: Globe2 },
     { name: "Database (DB)", href: "/db", icon: Database },
   ];
 
@@ -43,7 +44,14 @@ export function Navbar() {
               Interoperable Digital Public Infrastructure for Climate-Resilient Farming
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
+            <Link
+              href="/interoperability"
+              className="hover:text-emerald-300 transition-colors flex items-center gap-1 font-mono text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded border border-slate-700 text-slate-300"
+            >
+              <Code2 className="h-3 w-3 text-emerald-400" />
+              <span>CADS API</span>
+            </Link>
             <Link
               href="/db"
               className="hover:text-emerald-300 transition-colors flex items-center gap-1 font-mono text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded border border-slate-700 text-emerald-400"

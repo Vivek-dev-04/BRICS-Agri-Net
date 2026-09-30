@@ -1,17 +1,22 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { useFarm } from "@/context/FarmContext";
-import { DiseaseDiagnosisResult } from "@/lib/services/diseaseService";
+import {
+  DiseaseDiagnosisResult,
+  BRICS_PATHOLOGY_SAMPLES,
+  BRICS_SURVEILLANCE_ALERTS,
+  BricsSurveillanceAlert,
+} from "@/lib/services/diseaseService";
+import { localDb, StoredDiseaseRecord } from "@/lib/db/localStorageDb";
 import {
   ScanEye,
   UploadCloud,
   CheckCircle2,
   AlertTriangle,
   ShieldCheck,
-  Sparkles,
   RefreshCw,
   Camera,
   Info,
@@ -20,11 +25,17 @@ import {
   Printer,
   Leaf,
   FlaskConical,
-  ArrowLeft,
-  X,
   Layers,
   Bot,
   Cpu,
+  Calculator,
+  History,
+  Radio,
+  Clock,
+  ExternalLink,
+  ChevronRight,
+  Shield,
+  Trash2,
 } from "lucide-react";
 
 export default function DiseaseDiagnosisPage() {
@@ -38,8 +49,20 @@ export default function DiseaseDiagnosisPage() {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [hasGeminiKey, setHasGeminiKey] = useState(false);
 
+  // Field Scouting History
+  const [history, setHistory] = useState<StoredDiseaseRecord[]>([]);
+
+  // Application Dosage Calculator
+  const [sprayAcreage, setSprayAcreage] = useState<number>(farm.areaAcres || 4.5);
+  const [sprayerType, setSprayerType] = useState<"knapsack" | "tractor" | "drone">("knapsack");
+
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const loadHistory = useCallback(() => {
+    const records = localDb.getDiseaseRecords(farm.id);
+    setHistory(records);
+  }, [farm.id]);
 
   useEffect(() => {
     fetch("/api/disease")
@@ -50,7 +73,16 @@ export default function DiseaseDiagnosisPage() {
         }
       })
       .catch((err) => console.warn("Failed to check vision engine status:", err));
-  }, []);
+
+    loadHistory();
+  }, [loadHistory]);
+
+  // Keep spray acreage in sync when switching farms
+  useEffect(() => {
+    if (farm.areaAcres) {
+      setSprayAcreage(farm.areaAcres);
+    }
+  }, [farm.areaAcres]);
 
   // Handle Real File Upload
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,7 +116,29 @@ export default function DiseaseDiagnosisPage() {
 
       const data = await res.json();
       if (data.success && data.diagnosis) {
-        setDiagnosis(data.diagnosis);
+        const diag: DiseaseDiagnosisResult = data.diagnosis;
+        setDiagnosis(diag);
+
+        // Persist to local database
+        const recordId = `diag-${Date.now().toString().slice(-6)}`;
+        localDb.saveDiseaseRecord({
+          id: recordId,
+          farmId: farm.id,
+          crop: diag.crop || farm.crop,
+          diseaseName: diag.diseaseName,
+          scientificName: diag.scientificName,
+          severity: diag.severity,
+          confidence: diag.confidence,
+          isHealthy: diag.isHealthy,
+          symptoms: diag.symptoms,
+          organicRemedy: diag.organicRemedy,
+          chemicalRemedy: diag.chemicalRemedy,
+          engine: diag.engine,
+          diagnosedAt: diag.diagnosedAt || new Date().toISOString(),
+          status: "Under Observation",
+        });
+
+        loadHistory();
       }
     } catch (err) {
       console.error("Diagnosis error:", err);
@@ -98,6 +152,42 @@ export default function DiseaseDiagnosisPage() {
     setSelectedSample(sampleId);
     setImagePreview(null);
     runDiagnosis({ sampleId });
+  };
+
+  // Handle Status Change on Historical Scans
+  const handleStatusChange = (id: string, newStatus: StoredDiseaseRecord["status"]) => {
+    localDb.updateDiseaseRecordStatus(id, newStatus);
+    loadHistory();
+  };
+
+  // Handle Delete Record
+  const handleDeleteRecord = (id: string) => {
+    localDb.deleteDiseaseRecord(id);
+    loadHistory();
+  };
+
+  // Load Past Scan into Active View
+  const handleViewHistoricalScan = (rec: StoredDiseaseRecord) => {
+    setDiagnosis({
+      diseaseName: rec.diseaseName,
+      scientificName: rec.scientificName,
+      crop: rec.crop,
+      confidence: rec.confidence,
+      severity: rec.severity,
+      isHealthy: rec.isHealthy,
+      symptoms: rec.symptoms,
+      organicRemedy: rec.organicRemedy,
+      chemicalRemedy: rec.chemicalRemedy,
+      treatments: [rec.organicRemedy, rec.chemicalRemedy],
+      preventiveMeasures: [
+        "Maintain crop spacing and balanced irrigation",
+        "Monitor for recurring spore germination following rain events",
+      ],
+      engine: rec.engine,
+      diagnosedAt: rec.diagnosedAt,
+    });
+    setImagePreview(null);
+    setSelectedSample(null);
   };
 
   // Reset
@@ -156,6 +246,17 @@ export default function DiseaseDiagnosisPage() {
     }
   };
 
+  // Calculations for Dosage Helper
+  const waterRatePerAcre = sprayerType === "drone" ? 30 : sprayerType === "tractor" ? 250 : 180;
+  const totalWaterLitres = Math.round(sprayAcreage * waterRatePerAcre);
+  const knapsackTanks = Math.ceil(totalWaterLitres / 15);
+
+  // Parse approximate chemical rate (defaulting to 1ml/L or 2g/L)
+  const isGramUnit = diagnosis?.chemicalRemedy.includes("g/L") || diagnosis?.chemicalRemedy.includes("g per liter");
+  const chemicalMultiplier = isGramUnit ? 2 : 1;
+  const totalChemicalQty = Math.round(totalWaterLitres * chemicalMultiplier);
+  const organicBioQty = Math.round(totalWaterLitres * 0.05); // 5% extract
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <Navbar />
@@ -180,7 +281,7 @@ export default function DiseaseDiagnosisPage() {
               onClick={() => setViewMode("farmer")}
               className={`px-3 py-1 rounded-md transition-colors ${
                 viewMode === "farmer"
-                  ? "bg-emerald-500 text-slate-950 font-extrabold shadow-sm"
+                  ? "bg-emerald-500 text-slate-950 font-extrabold shadow-xs"
                   : "text-slate-400 hover:text-white"
               }`}
             >
@@ -191,7 +292,7 @@ export default function DiseaseDiagnosisPage() {
               onClick={() => setViewMode("technical")}
               className={`px-3 py-1 rounded-md transition-colors ${
                 viewMode === "technical"
-                  ? "bg-emerald-500 text-slate-950 font-extrabold shadow-sm"
+                  ? "bg-emerald-500 text-slate-950 font-extrabold shadow-xs"
                   : "text-slate-400 hover:text-white"
               }`}
             >
@@ -215,8 +316,8 @@ export default function DiseaseDiagnosisPage() {
             </h1>
             <p className="mt-0.5 text-xs sm:text-sm text-slate-400 max-w-2xl">
               {viewMode === "farmer"
-                ? `Take a photo of any unhealthy leaves on ${farm.name}. Our AI instantly detects the disease and tells you the organic remedy and chemical dosage.`
-                : "Multimodal Gemini 2.5 Flash Vision diagnostic pipeline cross-referencing chromatic lesions against BRICS crop pathology datasets."}
+                ? `Take a photo of any unhealthy leaves on ${farm.name}. Our AI instantly detects the disease, calculates required field spray dosages, and prescribes eco-friendly organic remedies.`
+                : "Multimodal Gemini 2.5 Flash Vision diagnostic pipeline cross-referencing chromatic lesions and leaf enations against calibrated BRICS plant pathology protocols."}
             </p>
           </div>
 
@@ -228,10 +329,10 @@ export default function DiseaseDiagnosisPage() {
               className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-semibold"
             >
               <option value="English">Language: English</option>
-              <option value="Hindi">भाषा: हिन्दी (Hindi)</option>
-              <option value="Portuguese">Idioma: Português</option>
-              <option value="Russian">Язык: Русский</option>
-              <option value="Chinese">语言: 中文 (Chinese)</option>
+              <option value="Hindi">Language: हिन्दी (Hindi)</option>
+              <option value="Portuguese">Language: Português</option>
+              <option value="Russian">Language: Русский</option>
+              <option value="Chinese">Language: 中文 (Chinese)</option>
             </select>
 
             {diagnosis && (
@@ -375,7 +476,7 @@ export default function DiseaseDiagnosisPage() {
                 <button
                   type="button"
                   onClick={() => cameraInputRef.current?.click()}
-                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-2.5 text-xs font-bold transition-colors shadow-sm"
+                  className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 py-2.5 text-xs font-bold transition-colors shadow-xs"
                 >
                   <Camera className="h-4 w-4" />
                   <span>Take Photo with Camera</span>
@@ -393,74 +494,58 @@ export default function DiseaseDiagnosisPage() {
               {/* Quick Sample Selector */}
               <div className="space-y-2 pt-2 border-t border-slate-800">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
-                  Or Test with Sample Leaf Profiles:
+                  Or Test with Calibrated BRICS Pathogen Samples:
                 </span>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => handleSelectSample("wheat-rust")}
-                    className={`p-2.5 rounded-lg text-left text-xs border transition-all ${
-                      selectedSample === "wheat-rust"
-                        ? "bg-amber-500/20 border-amber-500/60 text-amber-200 font-bold"
-                        : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
-                    }`}
-                  >
-                    <span className="block font-semibold">Wheat Leaf Rust</span>
-                    <span className="text-[10px] text-slate-400">Puccinia triticina</span>
-                  </button>
+                  {BRICS_PATHOLOGY_SAMPLES.map((sample) => {
+                    const isSelected = selectedSample === sample.id;
+                    const isHealthy = sample.id === "healthy-leaf";
+                    const isCritical = sample.risk === "Critical";
+                    const isHigh = sample.risk === "High";
 
-                  <button
-                    type="button"
-                    onClick={() => handleSelectSample("rice-blast")}
-                    className={`p-2.5 rounded-lg text-left text-xs border transition-all ${
-                      selectedSample === "rice-blast"
-                        ? "bg-red-500/20 border-red-500/60 text-red-200 font-bold"
-                        : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
-                    }`}
-                  >
-                    <span className="block font-semibold">Rice Blast</span>
-                    <span className="text-[10px] text-slate-400">Magnaporthe oryzae</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSelectSample("cotton-curl")}
-                    className={`p-2.5 rounded-lg text-left text-xs border transition-all ${
-                      selectedSample === "cotton-curl"
-                        ? "bg-amber-500/20 border-amber-500/60 text-amber-200 font-bold"
-                        : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
-                    }`}
-                  >
-                    <span className="block font-semibold">Cotton Leaf Curl</span>
-                    <span className="text-[10px] text-slate-400">Begomovirus (Whitefly)</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleSelectSample("healthy-leaf")}
-                    className={`p-2.5 rounded-lg text-left text-xs border transition-all ${
-                      selectedSample === "healthy-leaf"
-                        ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-200 font-bold"
-                        : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
-                    }`}
-                  >
-                    <span className="block font-semibold">Healthy Wheat Foliage</span>
-                    <span className="text-[10px] text-slate-400">Zero Lesions</span>
-                  </button>
+                    return (
+                      <button
+                        key={sample.id}
+                        type="button"
+                        onClick={() => handleSelectSample(sample.id)}
+                        className={`p-2.5 rounded-lg text-left text-xs border transition-all ${
+                          isSelected
+                            ? isHealthy
+                              ? "bg-emerald-500/20 border-emerald-500/60 text-emerald-200 font-bold"
+                              : isCritical || isHigh
+                              ? "bg-red-500/20 border-red-500/60 text-red-200 font-bold"
+                              : "bg-amber-500/20 border-amber-500/60 text-amber-200 font-bold"
+                            : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-0.5">
+                          <span className="font-semibold block truncate">{sample.name}</span>
+                          <span
+                            className={`h-1.5 w-1.5 rounded-full shrink-0 ${
+                              isHealthy ? "bg-emerald-400" : isCritical || isHigh ? "bg-red-400" : "bg-amber-400"
+                            }`}
+                          />
+                        </div>
+                        <span className="text-[10px] text-slate-400 block truncate">
+                          {sample.pathogen}
+                        </span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="p-3 rounded-lg bg-slate-900/60 border border-slate-800 text-[11px] text-slate-400 flex items-start gap-2">
                 <Info className="h-4 w-4 text-emerald-400 shrink-0 mt-0.5" />
                 <span>
-                  Tip for farmers: Hold your phone 10-15 cm away in daylight so leaf spots and vein patterns are sharp and clear.
+                  Tip for farmers: Hold phone 10-15 cm away in daylight so leaf spot margins and vein patterns are sharp.
                 </span>
               </div>
             </div>
           </div>
 
           {/* Right Column: Diagnostic Output Stage */}
-          <div className="lg:col-span-7">
+          <div className="lg:col-span-7 space-y-5">
             {analyzing ? (
               <div className="glass-panel rounded-2xl p-12 border border-emerald-500/30 text-center space-y-4 flex flex-col items-center justify-center h-full min-h-[380px]">
                 <RefreshCw className="h-10 w-10 text-emerald-400 animate-spin" />
@@ -554,7 +639,7 @@ export default function DiseaseDiagnosisPage() {
                   </div>
                 </div>
 
-                {/* Recommended Remediation Protocol */}
+                {/* Immediate Field Action Steps */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
                     <ShieldCheck className="h-4 w-4" /> Immediate Field Action Steps
@@ -575,7 +660,7 @@ export default function DiseaseDiagnosisPage() {
                 {/* Preventive Cultural Controls */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
-                    <AlertTriangle className="h-4 w-4 text-amber-400" /> Preventive Field Practices
+                    <AlertTriangle className="h-4 w-4 text-amber-400" /> Preventive Cultural Controls
                   </h4>
                   <div className="space-y-2">
                     {diagnosis.preventiveMeasures.map((p, idx) => (
@@ -583,12 +668,92 @@ export default function DiseaseDiagnosisPage() {
                         key={idx}
                         className="rounded-lg border border-slate-800 bg-slate-900/60 p-2.5 text-xs text-slate-300 flex items-start gap-2.5"
                       >
-                        <span className="text-emerald-400 font-bold">•</span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shrink-0 mt-1.5" />
                         <span>{p}</span>
                       </div>
                     ))}
                   </div>
                 </div>
+
+                {/* Application Dosage Calculator */}
+                {!diagnosis.isHealthy && (
+                  <div className="rounded-xl border border-slate-800 bg-slate-900/80 p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                        <Calculator className="h-4 w-4 text-emerald-400" />
+                        Field Application Dosage Calculator
+                      </h4>
+                      <span className="text-[11px] text-slate-400">
+                        Acreage: <strong className="text-white">{sprayAcreage} acres</strong>
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* Sprayer Type Selector */}
+                      <div>
+                        <label className="text-[11px] text-slate-400 block mb-1">Spraying Method</label>
+                        <select
+                          value={sprayerType}
+                          onChange={(e) => setSprayerType(e.target.value as any)}
+                          className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white"
+                        >
+                          <option value="knapsack">15L Knapsack Sprayer</option>
+                          <option value="tractor">Tractor Boom Sprayer</option>
+                          <option value="drone">Precision Agri-Drone</option>
+                        </select>
+                      </div>
+
+                      {/* Land Acreage Input */}
+                      <div>
+                        <label className="text-[11px] text-slate-400 block mb-1">Parcel Acreage</label>
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="0.5"
+                          max="100"
+                          value={sprayAcreage}
+                          onChange={(e) => setSprayAcreage(parseFloat(e.target.value) || 1)}
+                          className="w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-xs text-white"
+                        />
+                      </div>
+
+                      {/* Total Water Computed */}
+                      <div>
+                        <label className="text-[11px] text-slate-400 block mb-1">Total Water Required</label>
+                        <div className="p-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs font-bold text-emerald-400">
+                          {totalWaterLitres} Liters ({knapsackTanks} tank refills)
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Computed Dosages */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-slate-800/80 text-xs">
+                      <div className="p-2.5 rounded-lg bg-amber-950/20 border border-amber-500/20">
+                        <span className="text-[10px] uppercase font-bold text-amber-400 block">Chemical Requirement:</span>
+                        <span className="text-white font-bold text-sm">
+                          {totalChemicalQty} {isGramUnit ? "grams" : "ml"}
+                        </span>
+                        <span className="text-slate-400 text-[11px] block mt-0.5">
+                          Mix ~{(totalChemicalQty / knapsackTanks).toFixed(1)} {isGramUnit ? "g" : "ml"} per 15L tank
+                        </span>
+                      </div>
+
+                      <div className="p-2.5 rounded-lg bg-emerald-950/20 border border-emerald-500/20">
+                        <span className="text-[10px] uppercase font-bold text-emerald-400 block">Organic Bio-Extract:</span>
+                        <span className="text-white font-bold text-sm">
+                          {organicBioQty} Liters (5% dilution)
+                        </span>
+                        <span className="text-slate-400 text-[11px] block mt-0.5">
+                          Mix ~{(organicBioQty / knapsackTanks).toFixed(2)}L per 15L tank
+                        </span>
+                      </div>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 italic">
+                      Spray between 6:00 AM and 9:30 AM before wind speed exceeds 12 km/h. Always wear a protective respirator mask.
+                    </p>
+                  </div>
+                )}
 
                 <div className="pt-2 border-t border-slate-800 flex items-center justify-between">
                   <span className="text-[11px] text-slate-400">
@@ -607,10 +772,169 @@ export default function DiseaseDiagnosisPage() {
                 <ScanEye className="h-12 w-12 text-slate-600" />
                 <h4 className="text-base font-semibold text-slate-200">No Leaf Image Uploaded Yet</h4>
                 <p className="text-xs text-slate-400 max-w-sm">
-                  Take a photo with your mobile camera or click one of the sample leaf profiles on the left to see the AI diagnostic in action.
+                  Take a photo with your mobile camera or click one of the calibrated BRICS pathogen sample profiles on the left to see the AI diagnostic in action.
                 </p>
               </div>
             )}
+          </div>
+        </div>
+
+        {/* Lower Row: Scouting History & BRICS Cross-Border Pathogen Surveillance Feed */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4">
+          {/* Recent Field Scouting History (7 cols) */}
+          <div className="lg:col-span-7 glass-panel rounded-2xl p-5 border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <History className="h-4 w-4 text-emerald-400" />
+                Field Scouting & Diagnostic History ({farm.name})
+              </h3>
+              <span className="text-xs text-slate-400 font-mono">
+                {history.length} {history.length === 1 ? "Record" : "Records"}
+              </span>
+            </div>
+
+            {history.length === 0 ? (
+              <p className="text-xs text-slate-500 py-6 text-center">
+                No past leaf diagnostics recorded for this farm parcel yet. Run your first scan above.
+              </p>
+            ) : (
+              <div className="divide-y divide-slate-800/80">
+                {history.slice(0, 5).map((rec) => {
+                  const isHealthy = rec.isHealthy;
+                  const isHigh = rec.severity === "High" || rec.severity === "Critical";
+
+                  return (
+                    <div key={rec.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-white text-sm">{rec.diseaseName}</span>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+                              isHealthy
+                                ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/30"
+                                : isHigh
+                                ? "bg-red-500/20 text-red-300 border border-red-500/40"
+                                : "bg-amber-500/20 text-amber-300 border border-amber-500/40"
+                            }`}
+                          >
+                            {rec.severity}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3 text-slate-400 text-[11px]">
+                          <span className="flex items-center gap-1">
+                            <Clock className="h-3 w-3" />
+                            {new Date(rec.diagnosedAt).toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                            })}
+                          </span>
+                          <span>•</span>
+                          <span>Match: {(rec.confidence * 100).toFixed(0)}%</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {/* Status Toggle */}
+                        <select
+                          value={rec.status}
+                          onChange={(e) => handleStatusChange(rec.id, e.target.value as any)}
+                          className={`rounded-md px-2 py-1 text-[11px] font-bold border ${
+                            rec.status === "Resolved"
+                              ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40"
+                              : rec.status === "Remedy Applied"
+                              ? "bg-blue-500/20 text-blue-300 border-blue-500/40"
+                              : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                          }`}
+                        >
+                          <option value="Under Observation">Under Observation</option>
+                          <option value="Remedy Applied">Remedy Applied</option>
+                          <option value="Resolved">Resolved</option>
+                        </select>
+
+                        <button
+                          type="button"
+                          onClick={() => handleViewHistoricalScan(rec)}
+                          className="px-2.5 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 font-semibold text-[11px] transition-colors"
+                        >
+                          View
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteRecord(rec.id)}
+                          title="Delete diagnostic record"
+                          className="p-1 rounded text-slate-500 hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* BRICS Cross-Border Pathogen Surveillance Feed (5 cols) */}
+          <div className="lg:col-span-5 glass-panel rounded-2xl p-5 border border-slate-800 space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Radio className="h-4 w-4 text-emerald-400 animate-pulse" />
+                BRICS Pathogen Surveillance Watch
+              </h3>
+              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                Digital Public Good
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-400">
+              Coordinated cross-border epidemiological intelligence shared between BRICS member state agro-ministries.
+            </p>
+
+            <div className="space-y-3">
+              {BRICS_SURVEILLANCE_ALERTS.map((alert) => {
+                const isCritical = alert.riskLevel === "Critical";
+                const isHigh = alert.riskLevel === "High";
+
+                return (
+                  <div
+                    key={alert.id}
+                    className="p-3 rounded-xl border border-slate-800 bg-slate-900/60 space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700">
+                          {alert.country}
+                        </span>
+                        <span className="text-xs font-bold text-white">{alert.countryName}</span>
+                      </div>
+                      <span
+                        className={`rounded-full px-2 py-0.2 text-[10px] font-extrabold border ${
+                          isCritical || isHigh
+                            ? "bg-red-500/20 text-red-300 border-red-500/40"
+                            : "bg-amber-500/20 text-amber-300 border-amber-500/40"
+                        }`}
+                      >
+                        {alert.riskLevel}
+                      </span>
+                    </div>
+
+                    <div className="text-xs text-slate-200 font-semibold">
+                      {alert.pathogen} • <span className="text-slate-400">{alert.targetCrop}</span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-400 leading-relaxed">
+                      {alert.advisoryNote}
+                    </p>
+
+                    <div className="text-[10px] text-slate-500 font-mono">
+                      Zone: {alert.region}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </main>

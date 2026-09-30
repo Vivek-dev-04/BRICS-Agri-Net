@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
-import { diagnoseCropDisease } from "@/lib/services/diseaseService";
+import {
+  diagnoseCropDisease,
+  BRICS_PATHOLOGY_SAMPLES,
+  BRICS_SURVEILLANCE_ALERTS,
+} from "@/lib/services/diseaseService";
 
 export async function GET() {
   const hasGeminiKey = Boolean(process.env.GEMINI_API_KEY);
@@ -7,6 +11,8 @@ export async function GET() {
     success: true,
     hasGeminiKey,
     engine: hasGeminiKey ? "Google Gemini 2.5 Flash Vision" : "BRICS Calibrated Pathology Model",
+    samples: BRICS_PATHOLOGY_SAMPLES,
+    surveillanceAlerts: BRICS_SURVEILLANCE_ALERTS,
   });
 }
 

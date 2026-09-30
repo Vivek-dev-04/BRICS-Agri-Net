@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
-import { localDb, StoredUser, StoredFarm, StoredSoilData } from "@/lib/db/localStorageDb";
+import { localDb, StoredUser, StoredFarm, StoredSoilData, StoredDiseaseRecord, StoredFarmerPost } from "@/lib/db/localStorageDb";
 import {
   Database,
   Users,
@@ -18,19 +18,25 @@ import {
   MapPin,
   ExternalLink,
   FileCode,
+  ScanEye,
+  Globe2,
 } from "lucide-react";
 
 export default function DatabaseViewerPage() {
-  const [activeTab, setActiveTab] = useState<"users" | "farms" | "soil" | "raw">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "farms" | "soil" | "disease" | "posts" | "raw">("users");
   const [users, setUsers] = useState<StoredUser[]>([]);
   const [farms, setFarms] = useState<StoredFarm[]>([]);
   const [soilRecords, setSoilRecords] = useState<StoredSoilData[]>([]);
+  const [diseaseRecords, setDiseaseRecords] = useState<StoredDiseaseRecord[]>([]);
+  const [farmerPosts, setFarmerPosts] = useState<StoredFarmerPost[]>([]);
   const [copied, setCopied] = useState(false);
 
   const loadData = () => {
     setUsers(localDb.getUsers());
     setFarms(localDb.getFarms());
     setSoilRecords(localDb.getSoilRecords());
+    setDiseaseRecords(localDb.getDiseaseRecords());
+    setFarmerPosts(localDb.getFarmerPosts());
   };
 
   useEffect(() => {
@@ -55,6 +61,8 @@ export default function DatabaseViewerPage() {
     users,
     farms,
     soilRecords,
+    diseaseRecords,
+    farmerPosts,
     activeSession: localDb.getActiveSession(),
   };
 
@@ -209,6 +217,28 @@ export default function DatabaseViewerPage() {
           >
             <FlaskConical className="h-3.5 w-3.5 shrink-0" />
             <span>Soil Telemetry ({soilRecords.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("disease")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeTab === "disease"
+                ? "bg-emerald-800 text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <ScanEye className="h-3.5 w-3.5 shrink-0" />
+            <span>Disease Diagnostics ({diseaseRecords.length})</span>
+          </button>
+          <button
+            onClick={() => setActiveTab("posts")}
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              activeTab === "posts"
+                ? "bg-emerald-800 text-white shadow-xs"
+                : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+            }`}
+          >
+            <Globe2 className="h-3.5 w-3.5 shrink-0" />
+            <span>Farmer Commons ({farmerPosts.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("raw")}
@@ -383,7 +413,138 @@ export default function DatabaseViewerPage() {
           </div>
         )}
 
-        {/* TAB 4: RAW JSON STORAGE */}
+        {/* TAB: DISEASE RECORDS TABLE */}
+        {activeTab === "disease" && (
+          <div className="gov-card bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <span className="font-bold text-sm text-slate-800">
+                Table: `brics_disease_db`
+              </span>
+              <span className="text-xs text-slate-500">
+                Persistent field leaf diagnostics & remediation history
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200">
+                  <tr>
+                    <th className="py-2.5 px-4">Record ID</th>
+                    <th className="py-2.5 px-4">Farm ID</th>
+                    <th className="py-2.5 px-4">Crop</th>
+                    <th className="py-2.5 px-4">Diagnosed Condition</th>
+                    <th className="py-2.5 px-4">Severity</th>
+                    <th className="py-2.5 px-4">Confidence</th>
+                    <th className="py-2.5 px-4">Action Status</th>
+                    <th className="py-2.5 px-4">Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {diseaseRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-6 text-center text-slate-400">
+                        No disease diagnostic records stored yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    diseaseRecords.map((d) => (
+                      <tr key={d.id} className="hover:bg-slate-50/80">
+                        <td className="py-2.5 px-4 font-mono font-bold text-emerald-800">{d.id}</td>
+                        <td className="py-2.5 px-4 font-mono text-slate-600">{d.farmId}</td>
+                        <td className="py-2.5 px-4 font-semibold text-slate-900">{d.crop}</td>
+                        <td className="py-2.5 px-4 font-bold text-slate-800">{d.diseaseName}</td>
+                        <td className="py-2.5 px-4">
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[10px] font-bold border ${
+                              d.isHealthy
+                                ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                                : d.severity === "High" || d.severity === "Critical"
+                                ? "bg-red-100 text-red-800 border-red-300"
+                                : "bg-amber-100 text-amber-800 border-amber-300"
+                            }`}
+                          >
+                            {d.severity}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4 font-mono">{(d.confidence * 100).toFixed(0)}%</td>
+                        <td className="py-2.5 px-4 font-semibold text-slate-700">{d.status}</td>
+                        <td className="py-2.5 px-4 text-slate-400 font-mono text-[11px]">
+                          {new Date(d.diagnosedAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 5: FARMER COMMONS POSTS */}
+        {activeTab === "posts" && (
+          <div className="gov-card bg-white border border-slate-200 rounded-xl overflow-hidden shadow-xs">
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <span className="font-bold text-sm text-slate-800">
+                Table: `brics_farmer_posts_db` ({farmerPosts.length} Publications)
+              </span>
+              <span className="text-xs text-slate-500 font-mono">Cross-Border Farmer Commons Feed</span>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 text-slate-600 border-b border-slate-200 font-semibold uppercase text-[11px]">
+                    <th className="py-2.5 px-4">Nation & Author</th>
+                    <th className="py-2.5 px-4">Category</th>
+                    <th className="py-2.5 px-4">Crop Focus</th>
+                    <th className="py-2.5 px-4">Practice Title</th>
+                    <th className="py-2.5 px-4">Upvotes</th>
+                    <th className="py-2.5 px-4">CADS Ref</th>
+                    <th className="py-2.5 px-4">Published</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {farmerPosts.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-500 italic">
+                        No farmer publications found. Use the &quot;Load Demo Records&quot; button above.
+                      </td>
+                    </tr>
+                  ) : (
+                    farmerPosts.map((p) => (
+                      <tr key={p.id} className="hover:bg-slate-50">
+                        <td className="py-2.5 px-4">
+                          <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                            <span className="font-mono text-[10px] bg-slate-900 text-emerald-400 px-1 py-0.5 rounded">
+                              [{p.country}]
+                            </span>
+                            <span>{p.authorName}</span>
+                          </div>
+                          <span className="text-[10px] text-slate-500 block">{p.region}</span>
+                        </td>
+                        <td className="py-2.5 px-4">
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">
+                            {p.category}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4 font-semibold text-slate-800">{p.cropFocus}</td>
+                        <td className="py-2.5 px-4 font-medium text-slate-900 max-w-xs truncate" title={p.title}>
+                          {p.title}
+                        </td>
+                        <td className="py-2.5 px-4 font-mono font-bold text-emerald-800">{p.upvotes}</td>
+                        <td className="py-2.5 px-4 font-mono text-[10px] text-blue-700">{p.cadRefId || "N/A"}</td>
+                        <td className="py-2.5 px-4 text-slate-400 font-mono text-[11px]">
+                          {new Date(p.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: RAW JSON STORAGE */}
         {activeTab === "raw" && (
           <div className="gov-card bg-slate-900 text-slate-100 border border-slate-800 rounded-xl p-4 overflow-hidden shadow-xs">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800 text-xs">
