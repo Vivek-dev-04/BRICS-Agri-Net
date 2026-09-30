@@ -72,13 +72,27 @@ const DEFAULT_FARM: DemoFarm = {
   soilType: "Sandy Loam",
 };
 
+const DEFAULT_SOIL: StoredSoilData = {
+  farmId: DEFAULT_FARM.id,
+  soilType: "Sandy Loam",
+  nitrogen: 165,
+  phosphorus: 16,
+  potassium: 290,
+  ph: 7.8,
+  organicCarbon: 0.38,
+  moisture: 18,
+  soilScore: 64,
+  status: "Nitrogen Deficit & Low Organic Matter (Semi-Arid Loam)",
+  updatedAt: "2026-01-15T00:00:00.000Z",
+};
+
 const FarmContext = createContext<FarmContextType | undefined>(undefined);
 
 export function FarmProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile>(DEFAULT_USER);
   const [farms, setFarms] = useState<DemoFarm[]>([]);
   const [farm, setFarm] = useState<DemoFarm>(DEFAULT_FARM);
-  const [soil, setSoil] = useState<StoredSoilData>(localDb.getSoilByFarmId(DEFAULT_FARM.id));
+  const [soil, setSoil] = useState<StoredSoilData>(DEFAULT_SOIL);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Sync state from LocalStorage DB on mount

@@ -195,16 +195,20 @@ export default function DashboardPage() {
                 <FlaskConical className="h-4 w-4 text-blue-600" />
               </div>
               <div className="mt-2.5 flex items-baseline gap-1">
-                <span className="text-3xl font-extrabold text-slate-900">{soil?.soilScore ?? DEMO_HEALTH_SCORES.soilHealth}</span>
+                <span className="text-3xl font-extrabold text-slate-900" suppressHydrationWarning>
+                  {soil?.soilScore ?? DEMO_HEALTH_SCORES.soilHealth}
+                </span>
                 <span className="text-xs text-slate-500">/ 100</span>
               </div>
               <div className="mt-2 w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="bg-blue-600 h-1.5 rounded-full"
+                  className="bg-blue-600 h-1.5 rounded-full transition-all"
                   style={{ width: `${soil?.soilScore ?? DEMO_HEALTH_SCORES.soilHealth}%` }}
                 />
               </div>
-              <p className="mt-2 text-[11px] text-slate-600 truncate">{soil?.status ?? "Optimal NPK balance"}</p>
+              <p className="mt-2 text-[11px] text-slate-600 truncate" suppressHydrationWarning>
+                {soil?.status ?? "Optimal NPK balance"}
+              </p>
             </div>
 
             {/* Crop Health */}
@@ -277,10 +281,10 @@ export default function DashboardPage() {
                 <FlaskConical className="h-4 w-4" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-emerald-950">
+                <h4 className="text-xs font-bold text-emerald-950" suppressHydrationWarning>
                   Soil Chemistry: {soil?.status ?? "Nitrogen Deficit & Low Organic Matter"}
                 </h4>
-                <p className="mt-0.5 text-xs text-slate-700 leading-relaxed">
+                <p className="mt-0.5 text-xs text-slate-700 leading-relaxed" suppressHydrationWarning>
                   Soil Health Index is {soil?.soilScore ?? 64}/100 for {farm.soilType}. High potassium with low organic carbon and nitrogen shortfall.
                 </p>
                 <div className="mt-1 text-[11px] font-semibold text-slate-800">
@@ -333,7 +337,7 @@ export default function DashboardPage() {
                   <FlaskConical className="h-4 w-4 text-emerald-700" />
                   <span>Soil & Nutrient Protocol</span>
                 </div>
-                <p className="mt-1.5 text-xs text-slate-800 leading-relaxed">
+                <p className="mt-1.5 text-xs text-slate-800 leading-relaxed" suppressHydrationWarning>
                   {soil?.soilType ?? "Semi-Arid Loam"}: Available Nitrogen is at {soil?.nitrogen ?? 165} kg/ha (deficit). Inoculate with Azotobacter bio-fertilizer or apply split top-dressing prior to irrigation.
                 </p>
               </div>
