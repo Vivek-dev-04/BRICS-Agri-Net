@@ -26,8 +26,36 @@ export interface RegionInfo {
  * Determines soil type from coordinates using Indian and BRICS agro-pedological dataset
  */
 export function inferSoilFromCoordinates(lat: number, lng: number): SoilInfo {
-  // Northern Indo-Gangetic Alluvial Plains (Punjab, Haryana, UP, Bihar, WB basin)
-  if (lat >= 25.0 && lat <= 32.5 && lng >= 74.0 && lng <= 88.0) {
+  // Western Arid Thar Desert (Jaisalmer, Barmer, Bikaner, Jodhpur, Nagaur)
+  if (lat >= 24.0 && lat <= 30.5 && lng >= 69.0 && lng < 74.2) {
+    return {
+      soilType: "Arid Sandy",
+      soilNameEn: "Arid Sandy Desert Soil (Thar Basin)",
+      soilNameHi: "मरुस्थलीय रेतीली मिट्टी (थार क्षेत्र)",
+      descriptionEn: "High permeability, very fast drainage, low moisture retention, highly responsive to drip irrigation.",
+      descriptionHi: "कम नमी धारण क्षमता, त्वरित जल निकासी और खनिजों से भरपूर।",
+      drainage: "Excessive / Fast",
+      organicMatter: "Very Low (< 0.25%)",
+      bestSuitedCrops: ["Mustard", "Bajra", "Pulses", "Guar", "Cumin"],
+    };
+  }
+
+  // Central & Eastern Rajasthan Semi-Arid Belt (Jaipur, Ajmer, Sikar, Jhunjhunu, Tonk, Dausa, Alwar)
+  if (lat >= 25.0 && lat <= 28.5 && lng >= 74.2 && lng <= 77.0) {
+    return {
+      soilType: "Sandy Loam",
+      soilNameEn: "Semi-Arid Sandy Loam Soil (Jaipur Basin)",
+      soilNameHi: "अर्ध-शुष्क बलुई दोमट मिट्टी (जयपुर-अजमेर क्षेत्र)",
+      descriptionEn: "Permeable sandy loam texture with high potash reserves, moderate phosphorus, and low nitrogen/organic matter.",
+      descriptionHi: "बलुई दोमट संरचना, पोटाश की अच्छी मात्रा, लेकिन नाइट्रोजन और जैविक कार्बन की कमी।",
+      drainage: "Moderate to Fast",
+      organicMatter: "Low to Moderate (0.35–0.45%)",
+      bestSuitedCrops: ["Wheat", "Mustard", "Bajra", "Gram / Chickpea", "Guar"],
+    };
+  }
+
+  // Northern Indo-Gangetic Alluvial Plains (Punjab, Haryana, UP, Bihar, WB basin: starts East of 77.0°E or North of 28.5°N)
+  if ((lat >= 28.5 && lat <= 32.5 && lng >= 74.5 && lng <= 88.0) || (lat >= 24.5 && lat <= 28.5 && lng > 77.0 && lng <= 88.0)) {
     return {
       soilType: "Alluvial",
       soilNameEn: "Alluvial Soil (Indo-Gangetic Basin)",
@@ -37,20 +65,6 @@ export function inferSoilFromCoordinates(lat: number, lng: number): SoilInfo {
       drainage: "Well Drained",
       organicMatter: "Medium to High",
       bestSuitedCrops: ["Wheat", "Rice", "Sugarcane", "Mustard", "Maize"],
-    };
-  }
-
-  // Western Arid / Desert Soils (Rajasthan, North Gujarat)
-  if (lat >= 24.0 && lat <= 30.5 && lng < 74.5) {
-    return {
-      soilType: "Sandy Loam",
-      soilNameEn: "Arid Sandy Loam Soil (Thar Basin)",
-      soilNameHi: "बलुई दोमट / मरुस्थलीय मिट्टी",
-      descriptionEn: "Permeable sandy texture with high mineral salt content and fast drainage.",
-      descriptionHi: "कम नमी धारण क्षमता, त्वरित जल निकासी और खनिजों से भरपूर।",
-      drainage: "Excessive / Fast",
-      organicMatter: "Low to Moderate",
-      bestSuitedCrops: ["Mustard", "Bajra", "Pulses", "Guar", "Cotton"],
     };
   }
 

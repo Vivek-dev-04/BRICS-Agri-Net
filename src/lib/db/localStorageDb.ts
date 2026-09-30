@@ -92,20 +92,55 @@ const STORAGE_KEYS = {
 /**
  * Calculates dynamic chemical and fertility profile from soil type and coordinates
  */
-export function generateSoilMetrics(soilType: string): StoredSoilData {
+import { getPedologicalProfile } from "@/lib/services/soilService";
+
+export function generateSoilMetrics(soilType: string, lat?: number, lon?: number): StoredSoilData {
+  if (typeof lat === "number" && typeof lon === "number" && !isNaN(lat) && !isNaN(lon)) {
+    const pedology = getPedologicalProfile(lat, lon);
+    return {
+      farmId: "",
+      soilType: pedology.soilNameEn,
+      nitrogen: pedology.n,
+      phosphorus: pedology.p,
+      potassium: pedology.k,
+      ph: pedology.ph,
+      organicCarbon: pedology.oc,
+      moisture: 18,
+      soilScore: pedology.score,
+      status: pedology.statusHeadline,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
   const normalized = soilType.toLowerCase();
+
+  if (normalized.includes("sandy") || normalized.includes("arid") || normalized.includes("desert")) {
+    return {
+      farmId: "",
+      soilType: "Semi-Arid Sandy Loam",
+      nitrogen: 165,
+      phosphorus: 16,
+      potassium: 290,
+      ph: 7.8,
+      organicCarbon: 0.38,
+      moisture: 18,
+      soilScore: 64,
+      status: "Nitrogen Deficit & Low Organic Matter (Semi-Arid Loam)",
+      updatedAt: new Date().toISOString(),
+    };
+  }
 
   if (normalized.includes("alluvial")) {
     return {
       farmId: "",
       soilType: "Alluvial Soil",
-      nitrogen: 245,
-      phosphorus: 28,
+      nitrogen: 235,
+      phosphorus: 24,
       potassium: 310,
       ph: 7.2,
-      organicCarbon: 0.68,
-      moisture: 32,
-      soilScore: 86,
+      organicCarbon: 0.65,
+      moisture: 28,
+      soilScore: 82,
       status: "High Natural Fertility (Optimal NPK Balance)",
       updatedAt: new Date().toISOString(),
     };
@@ -115,30 +150,14 @@ export function generateSoilMetrics(soilType: string): StoredSoilData {
     return {
       farmId: "",
       soilType: "Black (Regur) Soil",
-      nitrogen: 210,
-      phosphorus: 20,
+      nitrogen: 205,
+      phosphorus: 18,
       potassium: 340,
-      ph: 7.9,
-      organicCarbon: 0.58,
-      moisture: 44,
-      soilScore: 82,
-      status: "Exceptional Moisture Retention (High Clay Potash)",
-      updatedAt: new Date().toISOString(),
-    };
-  }
-
-  if (normalized.includes("sandy")) {
-    return {
-      farmId: "",
-      soilType: "Sandy Loam Soil",
-      nitrogen: 165,
-      phosphorus: 16,
-      potassium: 195,
-      ph: 8.1,
-      organicCarbon: 0.35,
-      moisture: 16,
-      soilScore: 68,
-      status: "Fast Draining (Moderate Nitrogen Deficit)",
+      ph: 8.0,
+      organicCarbon: 0.55,
+      moisture: 38,
+      soilScore: 78,
+      status: "Exceptional Moisture Retention (Deep Montmorillonite Clay)",
       updatedAt: new Date().toISOString(),
     };
   }
@@ -270,7 +289,7 @@ class LocalStorageDatabase {
     localStorage.setItem(STORAGE_KEYS.FARMS, JSON.stringify(farms));
 
     // Also update/generate matching soil telemetry in localStorage
-    const soil = generateSoilMetrics(farm.soilType);
+    const soil = generateSoilMetrics(farm.soilType, farm.latitude, farm.longitude);
     soil.farmId = farm.id;
     this.saveSoilData(soil);
   }
@@ -294,9 +313,13 @@ class LocalStorageDatabase {
     const match = records.find((s) => s.farmId === farmId);
     if (match) return match;
 
-    // Fallback: look up farm soil type or generate
+    // Fallback: look up farm soil type or generate with coordinates
     const farm = this.getFarmById(farmId);
-    const generated = generateSoilMetrics(farm ? farm.soilType : "Alluvial");
+    const generated = generateSoilMetrics(
+      farm ? farm.soilType : "Semi-Arid Sandy Loam",
+      farm?.latitude,
+      farm?.longitude
+    );
     generated.farmId = farmId;
     return generated;
   }

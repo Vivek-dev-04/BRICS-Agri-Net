@@ -127,6 +127,34 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
     syncFromLocalDb();
   }, []);
 
+  // Synchronize active farm soil with live Soil Telemetry API
+  useEffect(() => {
+    if (farm && farm.latitude && farm.longitude) {
+      fetch(`/api/soil?lat=${farm.latitude}&lon=${farm.longitude}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.success && data.data) {
+            const liveSoil: StoredSoilData = {
+              farmId: farm.id,
+              soilType: data.data.soilNameEn || data.data.soilType,
+              nitrogen: data.data.nitrogen.value,
+              phosphorus: data.data.phosphorus.value,
+              potassium: data.data.potassium.value,
+              ph: data.data.ph.value,
+              organicCarbon: data.data.organicCarbon.value,
+              moisture: data.data.moisturePercent,
+              soilScore: data.data.soilScore,
+              status: data.data.statusHeadline,
+              updatedAt: data.data.updatedAt,
+            };
+            setSoil(liveSoil);
+            localDb.saveSoilData(liveSoil);
+          }
+        })
+        .catch((err) => console.warn("Live soil API fetch error:", err));
+    }
+  }, [farm.id, farm.latitude, farm.longitude]);
+
   const login = (mobileOrEmail: string, password?: string) => {
     const res = localDb.login(mobileOrEmail, password);
     if (res.success) {
