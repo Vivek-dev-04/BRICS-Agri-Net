@@ -113,7 +113,7 @@ export function LoginForm() {
       if (localResult.success) {
         // Also fire background API call for parity
         authenticateFarmer({ mobile, password, rememberMe }).catch(() => {});
-        router.push("/dashboard");
+        router.push("/farms");
         return;
       }
 

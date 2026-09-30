@@ -477,10 +477,10 @@ export function RegisterForm() {
 
         <div className="pt-2 flex flex-col sm:flex-row gap-3">
           <button
-            onClick={() => router.push("/dashboard")}
+            onClick={() => router.push("/farms")}
             className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 active:bg-emerald-900 text-white font-bold py-3.5 px-4 text-sm transition-all shadow-md focus:outline-none focus:ring-3 focus:ring-emerald-700/30"
           >
-            <span>{t.goToDashboard}</span>
+            <span>View My Farms & Add Plots</span>
             <ArrowRight className="h-4 w-4" />
           </button>
           <Link
