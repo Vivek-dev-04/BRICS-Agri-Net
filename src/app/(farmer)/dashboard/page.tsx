@@ -122,7 +122,7 @@ export default function DashboardPage() {
               ) : (
                 <>
                   <Volume2 className="h-3.5 w-3.5 text-emerald-700" />
-                  <span>🔊 Read Field Guide</span>
+                  <span>Audio Field Guide</span>
                 </>
               )}
             </button>
@@ -138,7 +138,7 @@ export default function DashboardPage() {
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                👨‍🌾 Farmer View
+                Farmer View
               </button>
               <button
                 type="button"
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
-                🔬 Technical Data
+                Technical Data
               </button>
             </div>
           </div>
@@ -228,7 +228,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 🌾 SECTION 1: TODAY'S FIELD ACTION GUIDE (Direct & Action-First for Farmers) */}
+        {/* SECTION 1: TODAY'S FIELD ACTION GUIDE (Direct & Action-First for Farmers) */}
         <div className="gov-card p-5 sm:p-6 border border-slate-200 bg-gradient-to-r from-emerald-900 via-emerald-800 to-teal-900 text-white rounded-xl shadow-md">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-emerald-700/60 pb-3">
             <div className="flex items-center gap-2">
@@ -237,7 +237,7 @@ export default function DashboardPage() {
               </span>
               <div>
                 <h2 className="text-base sm:text-lg font-bold tracking-tight text-white flex items-center gap-2">
-                  🌾 Today&apos;s Field Action Guide
+                  Today&apos;s Field Action Guide
                   <span className="bg-amber-400 text-slate-950 text-[10px] uppercase font-black px-2 py-0.5 rounded-full">
                     Action Plan
                   </span>
@@ -301,7 +301,7 @@ export default function DashboardPage() {
                   }`}
                 >
                   <Check className="h-3.5 w-3.5" />
-                  {actionDone["irrigation"] ? "Done ✓" : "Mark Done"}
+                  {actionDone["irrigation"] ? "Completed" : "Mark Done"}
                 </button>
               </div>
             </div>
@@ -353,7 +353,7 @@ export default function DashboardPage() {
                   }`}
                 >
                   <Check className="h-3.5 w-3.5" />
-                  {actionDone["fertilizer"] ? "Done ✓" : "Mark Done"}
+                  {actionDone["fertilizer"] ? "Completed" : "Mark Done"}
                 </button>
               </div>
             </div>
@@ -408,14 +408,14 @@ export default function DashboardPage() {
                   }`}
                 >
                   <Check className="h-3.5 w-3.5" />
-                  {actionDone["scouting"] ? "Done ✓" : "Mark Done"}
+                  {actionDone["scouting"] ? "Completed" : "Mark Done"}
                 </button>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 📊 SECTION 2: COMPOSITE AGRO-HEALTH INDICES (Simplified Orientation with Traffic-Light Meaning) */}
+        {/* SECTION 2: COMPOSITE AGRO-HEALTH INDICES (Simplified Orientation with Calibrated Status) */}
         <div>
           <div className="flex items-center justify-between mb-3">
             <div>
@@ -437,8 +437,8 @@ export default function DashboardPage() {
             <div className="gov-card p-4 border border-slate-200 hover:border-emerald-300 transition-colors">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                 <span>1. Overall Health</span>
-                <span className="rounded bg-emerald-100 text-emerald-900 px-1.5 py-0.5 text-[10px] font-bold">
-                  🟢 Good
+                <span className="rounded bg-emerald-100 text-emerald-900 px-2 py-0.5 text-[10px] font-bold inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Optimal
                 </span>
               </div>
               <div className="mt-2.5 flex items-baseline gap-1">
@@ -460,8 +460,8 @@ export default function DashboardPage() {
             <div className="gov-card p-4 border border-slate-200 hover:border-amber-300 transition-colors">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                 <span>2. Water & Weather</span>
-                <span className="rounded bg-red-100 text-red-900 px-1.5 py-0.5 text-[10px] font-bold">
-                  🔴 Dry Spell
+                <span className="rounded bg-red-100 text-red-900 px-2 py-0.5 text-[10px] font-bold inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-red-600" /> Moisture Deficit
                 </span>
               </div>
               <div className="mt-2.5 text-2xl font-extrabold text-red-700 capitalize">
@@ -479,8 +479,8 @@ export default function DashboardPage() {
             <div className="gov-card p-4 border border-slate-200 hover:border-blue-300 transition-colors">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                 <span>3. Soil Fertility</span>
-                <span className="rounded bg-amber-100 text-amber-900 px-1.5 py-0.5 text-[10px] font-bold">
-                  🟡 N Low
+                <span className="rounded bg-amber-100 text-amber-900 px-2 py-0.5 text-[10px] font-bold inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-amber-600" /> Low Nitrogen
                 </span>
               </div>
               <div className="mt-2.5 flex items-baseline gap-1">
@@ -504,8 +504,8 @@ export default function DashboardPage() {
             <div className="gov-card p-4 border border-slate-200 hover:border-emerald-300 transition-colors">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                 <span>4. Crop Canopy</span>
-                <span className="rounded bg-emerald-100 text-emerald-900 px-1.5 py-0.5 text-[10px] font-bold">
-                  🟢 Dense
+                <span className="rounded bg-emerald-100 text-emerald-900 px-2 py-0.5 text-[10px] font-bold inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600" /> Dense Canopy
                 </span>
               </div>
               <div className="mt-2.5 flex items-baseline gap-1">
@@ -527,8 +527,8 @@ export default function DashboardPage() {
             <div className="gov-card p-4 border border-slate-200 hover:border-slate-300 transition-colors">
               <div className="flex items-center justify-between text-xs font-semibold text-slate-700">
                 <span>5. Disease Risk</span>
-                <span className="rounded bg-slate-100 text-slate-700 px-1.5 py-0.5 text-[10px] font-bold">
-                  ⚪ Scan Needed
+                <span className="rounded bg-slate-100 text-slate-700 px-2 py-0.5 text-[10px] font-bold inline-flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-slate-400" /> Unscreened
                 </span>
               </div>
               <div className="mt-2.5 text-2xl font-extrabold text-slate-700">
@@ -544,7 +544,7 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* ⚠️ SECTION 3: ACTIVE AGRONOMIC BULLETINS (Re-oriented into Clear, Direct Explanations) */}
+        {/* SECTION 3: ACTIVE AGRONOMIC BULLETINS */}
         <div className="space-y-2.5">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
@@ -565,7 +565,7 @@ export default function DashboardPage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-bold text-amber-950">
-                    💧 Water Shortage Warning: Evaporation is High
+                    Water Shortage Advisory: Evaporative Demand Exceeds Rainfall
                   </h4>
                   <span className="bg-amber-200 text-amber-900 text-[10px] font-bold px-1.5 py-0.2 rounded">
                     Action Required
@@ -579,7 +579,7 @@ export default function DashboardPage() {
                   )}
                 </p>
                 <div className="text-[11px] font-bold text-slate-900 bg-white/70 p-1.5 rounded border border-amber-200 inline-block">
-                  💡 <strong>Action:</strong> {weather?.agroRisks.waterStress.recommendation ?? "Schedule irrigation within next 24-48 hours."}
+                  <strong>Recommendation:</strong> {weather?.agroRisks.waterStress.recommendation ?? "Schedule irrigation within next 24-48 hours."}
                 </div>
               </div>
             </div>
@@ -592,7 +592,7 @@ export default function DashboardPage() {
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-bold text-emerald-950" suppressHydrationWarning>
-                    🌱 Soil Nutrition: Nitrogen Shortfall Detected
+                    Soil Chemistry: Nitrogen Shortfall Detected
                   </h4>
                   <span className="bg-emerald-200 text-emerald-950 text-[10px] font-bold px-1.5 py-0.2 rounded">
                     Fertilizer Tip
@@ -606,14 +606,14 @@ export default function DashboardPage() {
                   )}
                 </p>
                 <div className="text-[11px] font-bold text-slate-900 bg-white/70 p-1.5 rounded border border-emerald-200 inline-block">
-                  🌱 <strong>Action:</strong> Apply 25 kg/acre urea or organic compost with next irrigation cycle.
+                  <strong>Recommendation:</strong> Apply 25 kg/acre urea or organic compost with next irrigation cycle.
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 🤖 SECTION 4: SPLIT GRID - AI ADVISORY & RE-ORIENTED TELEMETRY WIDGETS */}
+        {/* SECTION 4: SPLIT GRID - AI ADVISORY & TELEMETRY WIDGETS */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main 2 Cols: AI Agro-Advisory Preview */}
           <div className="lg:col-span-2 gov-card p-5 sm:p-6 border border-slate-200 space-y-4">
@@ -650,7 +650,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-blue-900">
                     <Droplets className="h-4 w-4 text-blue-700" />
-                    <span>💧 What to do: Apply 30–35 mm Drip Irrigation</span>
+                    <span>Irrigation Directive: Apply 30–35 mm Drip Irrigation</span>
                   </div>
                   <span className="rounded bg-blue-200 text-blue-900 px-2 py-0.5 text-[10px] font-bold">
                     High Priority
@@ -658,10 +658,10 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-blue-950">
                   <span className="bg-white/80 border border-blue-200 px-2 py-0.5 rounded">
-                    ⏰ Time: Early Morning / Evening
+                    Schedule: Early Morning / Evening
                   </span>
                   <span className="bg-white/80 border border-blue-200 px-2 py-0.5 rounded">
-                    💧 Amount: 4–5 Hours Drip Run
+                    Target: 4–5 Hours Drip Run
                   </span>
                 </div>
                 <p className="text-xs text-slate-700 leading-relaxed pt-1">
@@ -674,7 +674,7 @@ export default function DashboardPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-xs font-bold text-emerald-950">
                     <FlaskConical className="h-4 w-4 text-emerald-700" />
-                    <span>🌱 What to do: Top-Dress Nitrogen Prior to Watering</span>
+                    <span>Nutrient Directive: Top-Dress Nitrogen Prior to Watering</span>
                   </div>
                   <span className="rounded bg-emerald-200 text-emerald-950 px-2 py-0.5 text-[10px] font-bold">
                     Nutrient Protocol
@@ -682,10 +682,10 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex flex-wrap gap-2 text-[11px] font-semibold text-emerald-950">
                   <span className="bg-white/80 border border-emerald-200 px-2 py-0.5 rounded">
-                    🌾 Dosage: 25 kg/acre Urea
+                    Dosage: 25 kg/acre Urea
                   </span>
                   <span className="bg-white/80 border border-emerald-200 px-2 py-0.5 rounded">
-                    ♻ Alternative: Azotobacter Bio-Fertilizer
+                    Alternative: Azotobacter Bio-Fertilizer
                   </span>
                 </div>
                 <p className="text-xs text-slate-700 leading-relaxed pt-1" suppressHydrationWarning>
@@ -711,7 +711,7 @@ export default function DashboardPage() {
                   href="/disease"
                   className="rounded-lg bg-emerald-800 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 shrink-0 shadow-sm text-center"
                 >
-                  📷 Diagnose Leaf
+                  Diagnose Leaf
                 </Link>
               </div>
             </div>
@@ -724,9 +724,9 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Right Col: Telemetry Widgets with Farmer-Friendly Explanations */}
+          {/* Right Col: Telemetry Widgets with Clean Explanations */}
           <div className="space-y-4">
-            {/* 🛰 Satellite NDVI Card */}
+            {/* Satellite NDVI Card */}
             <div className="gov-card p-5 border border-slate-200 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
@@ -744,7 +744,7 @@ export default function DashboardPage() {
                     {DEMO_HEALTH_SCORES.ndviCurrent}
                   </div>
                   <p className="text-[11px] text-emerald-700 flex items-center gap-1 mt-0.5 font-bold">
-                    🟢 Green Foliage Coverage: 61%
+                    Canopy Coverage: 61%
                   </p>
                 </div>
                 <span className="rounded-full bg-emerald-100 text-emerald-900 px-2.5 py-0.5 text-xs font-bold border border-emerald-200">
@@ -759,7 +759,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            {/* 🌦 Weather Telemetry Card */}
+            {/* Weather Telemetry Card */}
             <div className="gov-card p-5 border border-slate-200 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
@@ -802,12 +802,12 @@ export default function DashboardPage() {
               <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
                 <span className="text-slate-600">Spraying Condition:</span>
                 <span className="font-bold text-emerald-800">
-                  🟢 Safe (Low Wind {weather?.current.windSpeedKmh ?? 11} km/h)
+                  Safe (Low Wind {weather?.current.windSpeedKmh ?? 11} km/h)
                 </span>
               </div>
             </div>
 
-            {/* 🌐 BRICS CADS Interoperability Card */}
+            {/* BRICS CADS Interoperability Card */}
             <div className="gov-card p-5 border border-slate-200 bg-emerald-50/40 space-y-2">
               <div className="flex items-center justify-between">
                 <h4 className="text-xs font-bold text-emerald-950 flex items-center gap-1.5">

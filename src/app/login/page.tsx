@@ -23,12 +23,16 @@ export default function LoginPage() {
               Interoperable Digital Public Infrastructure for Climate-Resilient Farming
             </span>
           </div>
-          <div className="flex items-center gap-2 font-mono text-slate-400 text-[10px]">
-            <span>🇮🇳 India</span>
-            <span>🇧🇷 Brazil</span>
-            <span>🇷🇺 Russia</span>
-            <span>🇨🇳 China</span>
-            <span>🇿🇦 South Africa</span>
+          <div className="flex items-center gap-1.5 font-mono text-slate-400 text-[10px]">
+            <span>IN</span>
+            <span className="text-slate-600">•</span>
+            <span>BR</span>
+            <span className="text-slate-600">•</span>
+            <span>RU</span>
+            <span className="text-slate-600">•</span>
+            <span>CN</span>
+            <span className="text-slate-600">•</span>
+            <span>ZA</span>
           </div>
         </div>
       </div>

@@ -16,12 +16,12 @@ export function Navbar() {
     pathname === "/register" ||
     pathname === "/forgot-password";
 
-  const countryFlags: Record<string, string> = {
-    IN: "🇮🇳",
-    BR: "🇧🇷",
-    RU: "🇷🇺",
-    CN: "🇨🇳",
-    ZA: "🇿🇦",
+  const countryCodes: Record<string, string> = {
+    IN: "IN",
+    BR: "BR",
+    RU: "RU",
+    CN: "CN",
+    ZA: "ZA",
   };
 
   const navLinks = [
@@ -51,12 +51,16 @@ export function Navbar() {
               <Database className="h-3 w-3" />
               <span>Inspect DB</span>
             </Link>
-            <div className="flex items-center gap-2 font-mono text-slate-400 text-[10px]">
-              <span>🇮🇳 India</span>
-              <span>🇧🇷 Brazil</span>
-              <span>🇷🇺 Russia</span>
-              <span>🇨🇳 China</span>
-              <span>🇿🇦 South Africa</span>
+            <div className="flex items-center gap-1.5 font-mono text-slate-400 text-[10px]">
+              <span>IN</span>
+              <span className="text-slate-600">•</span>
+              <span>BR</span>
+              <span className="text-slate-600">•</span>
+              <span>RU</span>
+              <span className="text-slate-600">•</span>
+              <span>CN</span>
+              <span className="text-slate-600">•</span>
+              <span>ZA</span>
             </div>
           </div>
         </div>
@@ -128,8 +132,8 @@ export function Navbar() {
                     className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 py-1.5 px-3 text-xs text-slate-700 hover:bg-slate-100 hover:border-slate-300 transition-all"
                     title="View Farm Details"
                   >
-                    <span className="text-base leading-none">
-                      {countryFlags[user.country] || "🌾"}
+                    <span className="flex items-center justify-center font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 shrink-0">
+                      {countryCodes[user.country] || user.country || "IN"}
                     </span>
                     <div className="text-left hidden sm:block">
                       <span className="font-bold block text-[11px] leading-tight text-slate-900">

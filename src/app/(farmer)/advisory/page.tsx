@@ -180,7 +180,7 @@ export default function AdvisoryPage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              👨‍🌾 Farmer View
+              Farmer View
             </button>
             <button
               type="button"
@@ -191,7 +191,7 @@ export default function AdvisoryPage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              🔬 Agronomist Data
+              Agronomist Data
             </button>
           </div>
         </div>
@@ -248,7 +248,7 @@ export default function AdvisoryPage() {
               ) : (
                 <>
                   <Volume2 className="h-3.5 w-3.5" />
-                  <span>🔊 Listen Aloud</span>
+                  <span>Listen Aloud</span>
                 </>
               )}
             </button>
@@ -337,14 +337,14 @@ export default function AdvisoryPage() {
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs">
             {/* Feed 1: Farm & Crop */}
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-slate-400 block text-[11px] font-semibold">🌾 Crop & Soil Type:</span>
+              <span className="text-slate-400 block text-[11px] font-semibold">Crop & Soil Type:</span>
               <strong className="text-white truncate block text-sm mt-0.5">{farm.crop}</strong>
               <div className="text-[11px] text-slate-400 truncate">{farm.soilType}</div>
             </div>
 
             {/* Feed 2: Soil Parameters */}
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-slate-400 block text-[11px] font-semibold">🧪 Soil Chemistry:</span>
+              <span className="text-slate-400 block text-[11px] font-semibold">Soil Chemistry:</span>
               <strong className={soil?.nitrogen < 200 ? "text-amber-400 block text-sm mt-0.5" : "text-emerald-400 block text-sm mt-0.5"}>
                 Nitrogen Deficit
               </strong>
@@ -353,7 +353,7 @@ export default function AdvisoryPage() {
 
             {/* Feed 3: Weather Radar */}
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-slate-400 block text-[11px] font-semibold">🌦 Weather Condition:</span>
+              <span className="text-slate-400 block text-[11px] font-semibold">Weather Condition:</span>
               <strong className="text-amber-400 block text-sm mt-0.5">
                 {weather?.current.temp ?? 30}°C Warm
               </strong>
@@ -364,7 +364,7 @@ export default function AdvisoryPage() {
 
             {/* Feed 4: Satellite NDVI */}
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-slate-400 block text-[11px] font-semibold">🛰 Satellite Canopy:</span>
+              <span className="text-slate-400 block text-[11px] font-semibold">Satellite Canopy:</span>
               <strong className="text-emerald-300 block text-sm mt-0.5">
                 0.61 (Healthy Leaves)
               </strong>
@@ -373,7 +373,7 @@ export default function AdvisoryPage() {
 
             {/* Feed 5: AI Engine */}
             <div className="p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <span className="text-slate-400 block text-[11px] font-semibold">🤖 Reasoning Engine:</span>
+              <span className="text-slate-400 block text-[11px] font-semibold">Reasoning Engine:</span>
               <strong className="text-emerald-400 block text-sm mt-0.5">
                 {advisory?.engine?.startsWith("gemini") ? "Gemini 2.5 Flash" : "Agronomic Model"}
               </strong>
@@ -400,7 +400,7 @@ export default function AdvisoryPage() {
                   <Sparkles className="h-4 w-4" /> Field Action Plan for {farm.name}
                 </span>
                 <h2 className="text-xl sm:text-2xl font-extrabold text-white mt-1">
-                  🌾 {advisory.crop} Customized Advisory
+                  {advisory.crop} Customized Advisory
                 </h2>
                 <p className="text-xs text-emerald-200/90 mt-1 font-medium">{advisory.cropHealthStatus}</p>
               </div>
@@ -416,7 +416,7 @@ export default function AdvisoryPage() {
                 <div className="flex items-center justify-between border-b border-blue-500/20 pb-2.5">
                   <span className="text-sm font-extrabold text-blue-200 flex items-center gap-2">
                     <Droplets className="h-5 w-5 text-blue-400" />
-                    💧 1. Irrigation Task
+                    1. Irrigation Scheduling
                   </span>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${
@@ -461,7 +461,7 @@ export default function AdvisoryPage() {
                 <div className="flex items-center justify-between border-b border-emerald-500/20 pb-2.5">
                   <span className="text-sm font-extrabold text-emerald-200 flex items-center gap-2">
                     <FlaskConical className="h-5 w-5 text-emerald-400" />
-                    🌱 2. Soil & Nutrition Task
+                    2. Soil & Nutrient Protocol
                   </span>
                   <span className="rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 text-[10px] font-black uppercase">
                     {advisory.soil.urgency} Urgency
@@ -500,7 +500,7 @@ export default function AdvisoryPage() {
                 <div className="flex items-center justify-between border-b border-amber-500/20 pb-2.5">
                   <span className="text-sm font-extrabold text-amber-200 flex items-center gap-2">
                     <ShieldAlert className="h-5 w-5 text-amber-400" />
-                    ⚠ 3. Disease & Climate Risk Watch
+                    3. Disease & Climate Risk Watch
                   </span>
                   <span
                     className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase ${
@@ -546,7 +546,7 @@ export default function AdvisoryPage() {
                 <div className="flex items-center justify-between border-b border-teal-500/20 pb-2.5">
                   <span className="text-sm font-extrabold text-teal-200 flex items-center gap-2">
                     <Leaf className="h-5 w-5 text-teal-400" />
-                    ♻ 4. Regenerative Soil Action
+                    4. Regenerative Agriculture Practice
                   </span>
                   <span className="rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/40 px-2.5 py-0.5 text-[10px] font-black uppercase">
                     {advisory.regenerative.urgency}
@@ -597,13 +597,13 @@ export default function AdvisoryPage() {
                     onClick={() => setFeedbackGiven(true)}
                     className="rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 text-xs text-slate-200 font-semibold transition-colors"
                   >
-                    👍 Clear & Actionable
+                    Clear & Actionable
                   </button>
                   <button
                     onClick={() => setFeedbackGiven(true)}
                     className="rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 px-3 py-1.5 text-xs text-slate-200 font-semibold transition-colors"
                   >
-                    👎 Needs Better Timing / Dosage
+                    Needs Recalibration
                   </button>
                 </div>
               )}

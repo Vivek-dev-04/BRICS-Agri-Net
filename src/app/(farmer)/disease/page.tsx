@@ -184,7 +184,7 @@ export default function DiseaseDiagnosisPage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              👨‍🌾 Farmer View
+              Farmer View
             </button>
             <button
               type="button"
@@ -195,7 +195,7 @@ export default function DiseaseDiagnosisPage() {
                   : "text-slate-400 hover:text-white"
               }`}
             >
-              🔬 Agronomist Data
+              Agronomist Data
             </button>
           </div>
         </div>
@@ -252,7 +252,7 @@ export default function DiseaseDiagnosisPage() {
                   ) : (
                     <>
                       <Volume2 className="h-3.5 w-3.5" />
-                      <span>🔊 Listen Aloud</span>
+                      <span>Listen Aloud</span>
                     </>
                   )}
                 </button>
@@ -405,7 +405,7 @@ export default function DiseaseDiagnosisPage() {
                         : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
                     }`}
                   >
-                    <span className="block font-semibold">🌾 Wheat Leaf Rust</span>
+                    <span className="block font-semibold">Wheat Leaf Rust</span>
                     <span className="text-[10px] text-slate-400">Puccinia triticina</span>
                   </button>
 
@@ -418,7 +418,7 @@ export default function DiseaseDiagnosisPage() {
                         : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
                     }`}
                   >
-                    <span className="block font-semibold">🌾 Rice Blast</span>
+                    <span className="block font-semibold">Rice Blast</span>
                     <span className="text-[10px] text-slate-400">Magnaporthe oryzae</span>
                   </button>
 
@@ -431,7 +431,7 @@ export default function DiseaseDiagnosisPage() {
                         : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
                     }`}
                   >
-                    <span className="block font-semibold">🌿 Cotton Leaf Curl</span>
+                    <span className="block font-semibold">Cotton Leaf Curl</span>
                     <span className="text-[10px] text-slate-400">Begomovirus (Whitefly)</span>
                   </button>
 
@@ -444,7 +444,7 @@ export default function DiseaseDiagnosisPage() {
                         : "bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700"
                     }`}
                   >
-                    <span className="block font-semibold">🟢 Healthy Wheat Leaf</span>
+                    <span className="block font-semibold">Healthy Wheat Foliage</span>
                     <span className="text-[10px] text-slate-400">Zero Lesions</span>
                   </button>
                 </div>
@@ -513,7 +513,7 @@ export default function DiseaseDiagnosisPage() {
 
                 {/* Visible Symptoms */}
                 <div className="space-y-1">
-                  <h4 className="text-xs font-bold text-slate-300">🔍 Visible Symptoms on Leaf:</h4>
+                  <h4 className="text-xs font-bold text-slate-300">Visible Symptoms on Leaf:</h4>
                   <p className="text-xs sm:text-sm text-slate-100 leading-relaxed bg-slate-900/70 p-3.5 rounded-xl border border-slate-800">
                     {diagnosis.symptoms}
                   </p>
@@ -526,7 +526,7 @@ export default function DiseaseDiagnosisPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
                         <Leaf className="h-4 w-4 text-emerald-400" />
-                        🌿 Low-Cost Organic Remedy
+                        Organic Biological Remedy
                       </span>
                       <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-1.5 py-0.5 rounded">
                         Eco-Friendly
@@ -542,7 +542,7 @@ export default function DiseaseDiagnosisPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
                         <FlaskConical className="h-4 w-4 text-amber-400" />
-                        🧪 Agronomic Field Chemical
+                        Agronomic Chemical Protocol
                       </span>
                       <span className="bg-amber-500/20 text-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded">
                         Standard Dosage

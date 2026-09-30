@@ -35,16 +35,16 @@ import { useFarm } from "@/context/FarmContext";
 import { localDb } from "@/lib/db/localStorageDb";
 
 const PRESET_CROPS = [
-  { id: "Wheat", labelEn: "Wheat", labelHi: "गेहूं", emoji: "🌾" },
-  { id: "Rice", labelEn: "Rice / Paddy", labelHi: "धान / चावल", emoji: "🌾" },
-  { id: "Cotton", labelEn: "Cotton", labelHi: "कपास", emoji: "🌿" },
-  { id: "Soybean", labelEn: "Soybean", labelHi: "सोयाबीन", emoji: "🌱" },
-  { id: "Mustard", labelEn: "Mustard", labelHi: "सरसों", emoji: "🌼" },
-  { id: "Maize", labelEn: "Maize / Corn", labelHi: "मक्का", emoji: "🌽" },
-  { id: "Sugarcane", labelEn: "Sugarcane", labelHi: "गन्ना", emoji: "🎋" },
-  { id: "Pulses", labelEn: "Pulses / Dal", labelHi: "दालें", emoji: "🫘" },
-  { id: "Vegetables", labelEn: "Vegetables", labelHi: "सब्जियां", emoji: "🥦" },
-  { id: "Fruits", labelEn: "Fruits / Orchards", labelHi: "फल", emoji: "🍎" },
+  { id: "Wheat", labelEn: "Wheat", labelHi: "गेहूं" },
+  { id: "Rice", labelEn: "Rice / Paddy", labelHi: "धान / चावल" },
+  { id: "Cotton", labelEn: "Cotton", labelHi: "कपास" },
+  { id: "Soybean", labelEn: "Soybean", labelHi: "सोयाबीन" },
+  { id: "Mustard", labelEn: "Mustard", labelHi: "सरसों" },
+  { id: "Maize", labelEn: "Maize / Corn", labelHi: "मक्का" },
+  { id: "Sugarcane", labelEn: "Sugarcane", labelHi: "गन्ना" },
+  { id: "Pulses", labelEn: "Pulses / Dal", labelHi: "दालें" },
+  { id: "Vegetables", labelEn: "Vegetables", labelHi: "सब्जियां" },
+  { id: "Fruits", labelEn: "Fruits / Orchards", labelHi: "फल" },
 ];
 
 const IRRIGATION_TYPES = [
@@ -81,7 +81,7 @@ const TRANSLATIONS = {
     areaLabel: "Farm Land Size (in Acres)",
     areaPlaceholder: "e.g. 4.5",
     cropLabel: "What Primary Crop Do You Grow?",
-    customCropBtn: "✏️ Other Crop",
+    customCropBtn: "Other Crop",
     customCropPlaceholder: "Type your crop name...",
     irrigationLabel: "Main Source of Irrigation",
     btnNext: "Continue to Next Step",
@@ -90,7 +90,7 @@ const TRANSLATIONS = {
     submitting: "Submitting farm registration...",
     alreadyRegistered: "Already registered?",
     signInLink: "Sign in here",
-    successTitle: "Farm Registered Successfully! 🎉",
+    successTitle: "Farm Registered Successfully!",
     successSubtitle: "Your farm has been registered with automated GPS telemetry and satellite soil classification.",
     goToDashboard: "Go to Farm Dashboard",
     goToLogin: "Back to Login",
@@ -121,7 +121,7 @@ const TRANSLATIONS = {
     areaLabel: "खेत का क्षेत्रफल (एकड़ में)",
     areaPlaceholder: "उदा. 4.5",
     cropLabel: "आप मुख्य रूप से कौन सी फसल उगाते हैं?",
-    customCropBtn: "✏️ अन्य फसल",
+    customCropBtn: "अन्य फसल",
     customCropPlaceholder: "फसल का नाम लिखें...",
     irrigationLabel: "सिंचाई का मुख्य स्रोत",
     btnNext: "अगले चरण पर जाएं",
@@ -130,7 +130,7 @@ const TRANSLATIONS = {
     submitting: "पंजीकरण हो रहा है...",
     alreadyRegistered: "क्या पहले से पंजीकृत हैं?",
     signInLink: "यहां साइन इन करें",
-    successTitle: "खेत सफलतापूर्वक पंजीकृत हुआ! 🎉",
+    successTitle: "खेत सफलतापूर्वक पंजीकृत हुआ!",
     successSubtitle: "आपका खेत सटीक GPS और उपग्रह मिट्टी वर्गीकरण के साथ सक्रिय हो गया है।",
     goToDashboard: "खेत डैशबोर्ड पर जाएं",
     goToLogin: "लॉगिन पर वापस जाएं",
@@ -739,7 +739,7 @@ export function RegisterForm() {
             </label>
             <div className="flex rounded-xl border border-slate-300 bg-white focus-within:border-emerald-700 focus-within:ring-3 focus-within:ring-emerald-700/15 overflow-hidden">
               <div className="flex items-center gap-1.5 bg-slate-100 px-3.5 py-2.5 border-r border-slate-200 text-slate-700 select-none">
-                <span className="text-sm">🇮🇳</span>
+                <span className="text-[10px] font-mono font-bold bg-slate-200 px-1 py-0.5 rounded text-slate-700">IN</span>
                 <span className="text-xs font-bold font-mono">+91</span>
               </div>
               <input
@@ -1057,9 +1057,10 @@ export function RegisterForm() {
                       applyCoordinates(26.9124, 75.7873, 25);
                       setCoordinatesSource("preset");
                     }}
-                    className="px-2.5 py-1 bg-amber-200/70 hover:bg-amber-200 text-amber-950 font-bold rounded text-[11px] transition-colors"
+                    className="px-2.5 py-1 bg-amber-200/70 hover:bg-amber-200 text-amber-950 font-bold rounded text-[11px] transition-colors inline-flex items-center gap-1.5"
                   >
-                    📍 Use Default National Agro-Grid Coordinates (26.91°N, 75.78°E)
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    <span>Use Default National Agro-Grid Coordinates (26.91°N, 75.78°E)</span>
                   </button>
                 </div>
               </div>
@@ -1257,12 +1258,12 @@ export function RegisterForm() {
                       setIsCustomCropSelected(false);
                       if (errors.crop) setErrors((prev) => ({ ...prev, crop: "" }));
                     }}
-                    className={`p-2 rounded-xl border text-left text-xs font-medium transition-all flex flex-col gap-1 items-start ${isSelected
+                    className={`p-2.5 rounded-xl border text-left text-xs font-medium transition-all flex items-center gap-2 ${isSelected
                         ? "bg-emerald-100/80 border-emerald-700 text-emerald-950 font-bold ring-2 ring-emerald-700/30 shadow-xs"
                         : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
                       }`}
                   >
-                    <span className="text-base">{cr.emoji}</span>
+                    <span className={`h-2 w-2 rounded-full shrink-0 ${isSelected ? "bg-emerald-600" : "bg-slate-300"}`} />
                     <span className="line-clamp-1 leading-tight text-[11px]">
                       {language === "hi" ? cr.labelHi : cr.labelEn}
                     </span>

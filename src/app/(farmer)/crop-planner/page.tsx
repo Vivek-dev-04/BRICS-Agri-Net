@@ -24,6 +24,7 @@ import {
   Cpu,
   Info,
   CheckCircle2,
+  CloudSun,
 } from "lucide-react";
 
 export default function CropPlannerPage() {
@@ -364,12 +365,18 @@ export default function CropPlannerPage() {
                     {/* Scientific Rationale */}
                     <div className="space-y-2 text-xs">
                       <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
-                        <strong className="text-teal-300 block mb-0.5">🌱 Why your soil likes it:</strong>
+                        <strong className="text-teal-300 flex items-center gap-1.5 mb-1 font-semibold">
+                          <Sprout className="h-3.5 w-3.5 text-teal-400 shrink-0" />
+                          Soil Suitability Rationale:
+                        </strong>
                         <p className="text-slate-300 leading-relaxed">{crop.soilCompatibilityReason}</p>
                       </div>
 
                       <div className="bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
-                        <strong className="text-blue-300 block mb-0.5">🌦 Climate & Water Resilience:</strong>
+                        <strong className="text-blue-300 flex items-center gap-1.5 mb-1 font-semibold">
+                          <CloudSun className="h-3.5 w-3.5 text-blue-400 shrink-0" />
+                          Climate & Water Resilience:
+                        </strong>
                         <p className="text-slate-300 leading-relaxed">{crop.climateResilienceReason}</p>
                       </div>
                     </div>
@@ -384,9 +391,10 @@ export default function CropPlannerPage() {
                           {crop.regenerativeBenefits.map((b, i) => (
                             <span
                               key={i}
-                              className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[11px] text-emerald-300"
+                              className="rounded-md bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[11px] text-emerald-300 flex items-center gap-1.5"
                             >
-                              ✓ {b}
+                              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 inline-block shrink-0" />
+                              {b}
                             </span>
                           ))}
                         </div>

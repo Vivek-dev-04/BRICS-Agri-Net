@@ -10,7 +10,7 @@ import { useFarm } from "@/context/FarmContext";
 
 const TRANSLATIONS = {
   en: {
-    welcome: "Welcome back 👋",
+    welcome: "Welcome back",
     title: "Sign in to your farm",
     subtitle: "Access your farm insights, weather information and personalized agricultural guidance.",
     mobileLabel: "Mobile Number",
@@ -26,7 +26,7 @@ const TRANSLATIONS = {
     authError: "We couldn't sign you in. Please check your mobile number and password and try again.",
   },
   hi: {
-    welcome: "वापसी पर स्वागत है 👋",
+    welcome: "वापसी पर स्वागत है",
     title: "अपने खेत के खाते में साइन इन करें",
     subtitle: "अपने खेत की जानकारी, मौसम का पूर्वानुमान और व्यक्तिगत कृषि सलाह प्राप्त करें।",
     mobileLabel: "मोबाइल नंबर",
@@ -173,8 +173,8 @@ export function LoginForm() {
 
           <div className="flex rounded-xl border border-slate-300 bg-white focus-within:border-emerald-700 focus-within:ring-3 focus-within:ring-emerald-700/15 transition-all overflow-hidden shadow-xs">
             {/* Country code prefix */}
-            <div className="flex items-center gap-1.5 bg-slate-50 px-3.5 py-3 border-r border-slate-200 select-none text-slate-700">
-              <span className="text-base leading-none" aria-hidden="true">🇮🇳</span>
+            <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-3 border-r border-slate-200 select-none text-slate-700">
+              <span className="text-[10px] font-mono font-bold bg-slate-200 px-1 py-0.5 rounded text-slate-700">IN</span>
               <span className="text-xs font-bold font-mono tracking-tight">+91</span>
             </div>
 

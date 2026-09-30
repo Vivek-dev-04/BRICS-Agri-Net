@@ -110,7 +110,9 @@ export function RegisterBranding() {
           <CheckCircle2 className="h-4 w-4 text-emerald-400" />
           <span>Completely free for farmers</span>
         </div>
-        <span className="font-mono text-[11px] text-emerald-300">🇮🇳 🇧🇷 🇷🇺 🇨🇳 🇿🇦</span>
+        <span className="font-mono text-[10px] text-emerald-300 font-semibold tracking-wider">
+          BRICS • IN BR RU CN ZA
+        </span>
       </div>
     </div>
   );

@@ -95,7 +95,9 @@ export default function BricsNetworkPage() {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-4xl leading-none">{c.flag}</span>
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-950 text-emerald-400 font-mono font-bold text-sm tracking-wider border border-emerald-800/40 shrink-0">
+                        {c.code}
+                      </div>
                       <div>
                         <h3 className="text-base font-bold text-slate-900 flex items-center gap-1.5">
                           {c.name}

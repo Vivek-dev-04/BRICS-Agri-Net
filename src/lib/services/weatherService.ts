@@ -138,7 +138,7 @@ export function computeAgroRisks(
 
   if (soilMoisturePct < 15 || (soilMoisturePct < 20 && et0Max > 5.0 && rainProb < 20)) {
     waterLevel = "CRITICAL";
-    waterTitle = "⚠ Critical Root-Zone Water Stress";
+    waterTitle = "Critical Root-Zone Water Stress";
     waterDesc = `Soil moisture is at ${soilMoisturePct.toFixed(1)}% with high evaporative demand (${et0Max.toFixed(1)} mm/day) and low rain probability (${rainProb}%).`;
     waterRec = "Immediate irrigation required within 24 hours to prevent permanent crop wilting point.";
   } else if (soilMoisturePct < 22 || et0Max > 4.5) {
@@ -155,7 +155,7 @@ export function computeAgroRisks(
 
   if (humidity >= 80 && temp >= 18 && temp <= 29) {
     fungalLevel = "HIGH";
-    fungalTitle = "⚠ High Spore Germination Risk (Rust / Blight)";
+    fungalTitle = "High Spore Germination Risk (Rust / Blight)";
     fungalDesc = `Prolonged relative humidity (${humidity}%) paired with warm temperatures (${temp.toFixed(1)}°C) creates ideal microclimate for foliar fungal pathogens.`;
   } else if (humidity >= 65) {
     fungalLevel = "MODERATE";
