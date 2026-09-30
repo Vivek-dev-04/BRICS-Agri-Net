@@ -17,6 +17,7 @@ import {
   KeyRound,
   MapPin,
   ExternalLink,
+  FileCode,
 } from "lucide-react";
 
 export default function DatabaseViewerPage() {
@@ -178,43 +179,47 @@ export default function DatabaseViewerPage() {
         <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
           <button
             onClick={() => setActiveTab("users")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === "users"
                 ? "bg-emerald-800 text-white shadow-xs"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
-            👤 Farmers ({users.length})
+            <Users className="h-3.5 w-3.5 shrink-0" />
+            <span>Farmers ({users.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("farms")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === "farms"
                 ? "bg-emerald-800 text-white shadow-xs"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
-            🌾 Farm Parcels ({farms.length})
+            <Sprout className="h-3.5 w-3.5 shrink-0" />
+            <span>Farm Parcels ({farms.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("soil")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === "soil"
                 ? "bg-emerald-800 text-white shadow-xs"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
-            🧪 Soil Telemetry ({soilRecords.length})
+            <FlaskConical className="h-3.5 w-3.5 shrink-0" />
+            <span>Soil Telemetry ({soilRecords.length})</span>
           </button>
           <button
             onClick={() => setActiveTab("raw")}
-            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${
+            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
               activeTab === "raw"
                 ? "bg-emerald-800 text-white shadow-xs"
                 : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
             }`}
           >
-            📋 Raw JSON Storage
+            <FileCode className="h-3.5 w-3.5 shrink-0" />
+            <span>Raw JSON Storage</span>
           </button>
         </div>
 

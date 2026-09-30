@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { generateAgroAdvisory, GenerateAdvisoryParams } from "@/lib/services/advisoryService";
+import { generateCropRecommendations, CropRecommendationParams } from "@/lib/services/cropRecommendationService";
 import { fetchOpenMeteoWeather } from "@/lib/services/weatherService";
 import { fetchSoilTelemetry } from "@/lib/services/soilService";
 import { DEMO_FARM } from "@/lib/mock-data";
@@ -9,11 +9,9 @@ export async function GET() {
 
   return NextResponse.json({
     success: true,
-    service: "AI Agro-Advisory Engine",
-    version: "v1.2",
+    service: "AI Crop Planning & Suitability Engine",
     hasGeminiKey,
-    activeEngine: hasGeminiKey ? "gemini-1.5-flash" : "agronomic-rule-engine",
-    supportedLanguages: ["English", "Hindi", "Portuguese", "Russian", "Chinese"],
+    activeEngine: hasGeminiKey ? "gemini-2.5-flash" : "agronomic-engine",
   });
 }
 
@@ -21,7 +19,8 @@ export async function POST(request: Request) {
   try {
     const body = await request.json().catch(() => ({}));
     const farm = body.farm || DEMO_FARM;
-    const language = body.language || "English";
+    const season = body.season || "Upcoming Season";
+    const priorityGoal = body.priorityGoal || "Balanced";
     const ndvi = typeof body.ndvi === "number" ? body.ndvi : 0.61;
 
     let weather = body.weather;
@@ -29,7 +28,7 @@ export async function POST(request: Request) {
       try {
         weather = await fetchOpenMeteoWeather(farm.latitude, farm.longitude);
       } catch (err) {
-        console.warn("Could not fetch live weather in advisory route:", err);
+        console.warn("Could not fetch live weather in crop recommendation route:", err);
       }
     }
 
@@ -51,29 +50,30 @@ export async function POST(request: Request) {
           updatedAt: soilTelemetry.updatedAt,
         };
       } catch (err) {
-        console.warn("Could not fetch live soil in advisory route:", err);
+        console.warn("Could not fetch live soil in crop recommendation route:", err);
       }
     }
 
-    const params: GenerateAdvisoryParams = {
+    const params: CropRecommendationParams = {
       farm,
       weather,
       soil,
       ndvi,
-      language,
+      season,
+      priorityGoal,
     };
 
-    const advisory = await generateAgroAdvisory(params);
+    const result = await generateCropRecommendations(params);
 
     return NextResponse.json({
       success: true,
-      message: `AI Advisory synthesized via ${advisory.engine}`,
-      advisory,
+      message: `Crop suitability plan synthesized via ${result.engine}`,
+      plan: result,
     });
   } catch (error) {
-    console.error("Advisory synthesis failure:", error);
+    console.error("Crop recommendation failure:", error);
     return NextResponse.json(
-      { success: false, error: "Failed to synthesize agro-advisory" },
+      { success: false, error: "Failed to generate crop planning recommendations" },
       { status: 500 }
     );
   }

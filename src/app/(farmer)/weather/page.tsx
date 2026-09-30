@@ -207,7 +207,7 @@ export default function WeatherPage() {
                   {weather.agroRisks.waterStress.description}
                 </p>
                 <p className="text-xs font-semibold text-slate-800 pt-1">
-                  💡 Action: {weather.agroRisks.waterStress.recommendation}
+                  Field Recommendation: {weather.agroRisks.waterStress.recommendation}
                 </p>
               </div>
             </div>
@@ -309,7 +309,7 @@ export default function WeatherPage() {
               </div>
               <p className="mt-1 text-xs text-slate-500">
                 {weather?.current.soilMoisturePercent && weather.current.soilMoisturePercent < 18
-                  ? "⚠ Severe root-zone depletion"
+                  ? "Severe root-zone depletion"
                   : "Adequate capillary water"}
               </p>
             </div>

@@ -320,11 +320,11 @@ export default function FarmsPage() {
                   onChange={(e) => setCountry(e.target.value as any)}
                   className="gov-input font-medium"
                 >
-                  <option value="IN">🇮🇳 India (IN)</option>
-                  <option value="BR">🇧🇷 Brazil (BR)</option>
-                  <option value="RU">🇷🇺 Russia (RU)</option>
-                  <option value="CN">🇨🇳 China (CN)</option>
-                  <option value="ZA">🇿🇦 South Africa (ZA)</option>
+                  <option value="IN">India (IN)</option>
+                  <option value="BR">Brazil (BR)</option>
+                  <option value="RU">Russia (RU)</option>
+                  <option value="CN">China (CN)</option>
+                  <option value="ZA">South Africa (ZA)</option>
                 </select>
               </div>
 

@@ -170,7 +170,7 @@ export const DEMO_BRICS_COUNTRIES = [
   {
     code: "IN",
     name: "India",
-    flag: "🇮🇳",
+    flag: "IN",
     majorCrop: "Wheat / Rice",
     climateRisk: "Medium",
     avgNdvi: 0.65,
@@ -180,7 +180,7 @@ export const DEMO_BRICS_COUNTRIES = [
   {
     code: "BR",
     name: "Brazil",
-    flag: "🇧🇷",
+    flag: "BR",
     majorCrop: "Soybean / Maize",
     climateRisk: "Medium",
     avgNdvi: 0.72,
@@ -190,7 +190,7 @@ export const DEMO_BRICS_COUNTRIES = [
   {
     code: "RU",
     name: "Russia",
-    flag: "🇷🇺",
+    flag: "RU",
     majorCrop: "Spring / Winter Wheat",
     climateRisk: "Low",
     avgNdvi: 0.68,
@@ -200,7 +200,7 @@ export const DEMO_BRICS_COUNTRIES = [
   {
     code: "CN",
     name: "China",
-    flag: "🇨🇳",
+    flag: "CN",
     majorCrop: "Paddy Rice / Corn",
     climateRisk: "High",
     avgNdvi: 0.70,
@@ -210,7 +210,7 @@ export const DEMO_BRICS_COUNTRIES = [
   {
     code: "ZA",
     name: "South Africa",
-    flag: "🇿🇦",
+    flag: "ZA",
     majorCrop: "White Maize / Citrus",
     climateRisk: "High",
     avgNdvi: 0.54,

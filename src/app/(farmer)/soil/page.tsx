@@ -379,7 +379,7 @@ export default function SoilHealthPage() {
               <div className="text-xs text-slate-600 space-y-1 pt-1">
                 <div>Agronomic Range: <strong className="text-slate-800">280–560 kg/ha</strong></div>
                 <p className="text-[11px] text-red-800 leading-relaxed font-medium">
-                  ⚠ Significant nitrogen shortfall. Will stunt vegetative tillering and reduce wheat yield unless supplemented with split urea/compost.
+                  Significant nitrogen shortfall. Will stunt vegetative tillering and reduce wheat yield unless supplemented with split urea/compost.
                 </p>
               </div>
             </div>
