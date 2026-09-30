@@ -23,7 +23,7 @@ export default function HomePage() {
 
   const handleDemoQuickLogin = () => {
     login("ram.singh@brics-agri.net");
-    router.push("/dashboard");
+    router.push("/farms");
   };
 
   return (

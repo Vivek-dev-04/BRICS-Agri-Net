@@ -12,12 +12,14 @@ import { useFarm } from "@/context/FarmContext";
 import { WeatherData } from "@/lib/services/weatherService";
 import {
   AlertTriangle,
+  ArrowLeft,
   ArrowRight,
   CloudSun,
   Droplets,
   FlaskConical,
   Leaf,
   MapPin,
+  Plus,
   Satellite,
   ShieldAlert,
   Sparkles,
@@ -25,10 +27,12 @@ import {
   TrendingDown,
   Info,
 } from "lucide-react";
+import { AddFarmModal } from "@/components/farmer/AddFarmModal";
 
 export default function DashboardPage() {
   const { farm, user, soil } = useFarm();
   const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [isAddFarmOpen, setIsAddFarmOpen] = useState(false);
 
   useEffect(() => {
     const lat = farm.latitude || 26.9124;
@@ -48,6 +52,19 @@ export default function DashboardPage() {
       <Navbar />
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
+        {/* Navigation Breadcrumb back to My Farms */}
+        <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+          <Link
+            href="/farms"
+            className="inline-flex items-center gap-1.5 text-emerald-800 hover:text-emerald-950 font-bold transition-colors"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" />
+            <span>← Back to My Farms</span>
+          </Link>
+          <span className="text-slate-300">/</span>
+          <span className="text-slate-700 font-semibold">{farm.name} (Farm Stats & Analytics)</span>
+        </div>
+
         {/* Farm Header Banner (Government Style) */}
         <div className="gov-card bg-white p-6 border border-slate-200 border-l-4 border-l-emerald-800 shadow-sm">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -81,6 +98,14 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5">
+              <button
+                type="button"
+                onClick={() => setIsAddFarmOpen(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-emerald-600 bg-emerald-50 px-3.5 py-2 text-xs font-bold text-emerald-900 hover:bg-emerald-100 transition-colors shadow-2xs"
+              >
+                <Plus className="h-3.5 w-3.5 text-emerald-700" />
+                <span>+ Register New Farm</span>
+              </button>
               <Link
                 href="/advisory"
                 className="flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm"
@@ -99,7 +124,8 @@ export default function DashboardPage() {
                 href="/farms"
                 className="flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:border-slate-400 transition-colors"
               >
-                Switch Farm
+                <ArrowLeft className="h-3.5 w-3.5 text-slate-500" />
+                <span>My Farms List</span>
               </Link>
             </div>
           </div>
@@ -430,6 +456,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+
+      {/* Register New Farm Parcel Modal */}
+      <AddFarmModal isOpen={isAddFarmOpen} onClose={() => setIsAddFarmOpen(false)} />
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { DemoFarm } from "@/lib/mock-data";
-import { localDb, StoredUser, StoredFarm, StoredSoilData } from "@/lib/db/localStorageDb";
+import { localDb, StoredSoilData } from "@/lib/db/localStorageDb";
 
 export interface UserProfile {
   id?: string;
@@ -38,12 +38,13 @@ interface FarmContextType {
   soil: StoredSoilData;
   isAuthenticated: boolean;
   login: (mobileOrEmail: string, password?: string) => { success: boolean; error?: string };
-  register: (data: RegisterPayload) => void;
+  register: (data: RegisterPayload) => { success: boolean; error?: string };
   addFarm: (farm: Omit<DemoFarm, "id">) => void;
   switchFarm: (farmId: string) => void;
   deleteFarm: (farmId: string) => void;
   logout: () => void;
   resetDatabase: () => void;
+  clearDatabase: () => void;
 }
 
 const DEFAULT_USER: UserProfile = {
@@ -75,10 +76,10 @@ const FarmContext = createContext<FarmContextType | undefined>(undefined);
 
 export function FarmProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile>(DEFAULT_USER);
-  const [farms, setFarms] = useState<DemoFarm[]>([DEFAULT_FARM]);
+  const [farms, setFarms] = useState<DemoFarm[]>([]);
   const [farm, setFarm] = useState<DemoFarm>(DEFAULT_FARM);
   const [soil, setSoil] = useState<StoredSoilData>(localDb.getSoilByFarmId(DEFAULT_FARM.id));
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Sync state from LocalStorage DB on mount
   const syncFromLocalDb = () => {
@@ -93,7 +94,10 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
         region: session.user.region,
       });
 
-      const allFarms = localDb.getFarms().map((f) => ({
+      // Strictly load ONLY farms belonging to the current authenticated user
+      const userFarmsList = localDb.getFarmsByUserId(session.user.id, session.user.name);
+
+      const userFarms = userFarmsList.map((f) => ({
         id: f.id,
         name: f.name,
         owner: f.owner,
@@ -109,9 +113,19 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
         soilType: f.soilType,
       }));
 
-      setFarms(allFarms);
+      setFarms(userFarms);
 
-      const activeFarm = allFarms.find((f) => f.id === session.farm.id) || allFarms[0];
+      const fallbackFarm: DemoFarm = {
+        ...DEFAULT_FARM,
+        id: `farm-${session.user.country.toLowerCase()}-${session.user.id.slice(-4)}`,
+        name: `${session.user.name}'s Farm`,
+        owner: session.user.name,
+        location: session.user.region,
+      };
+      const activeFarm =
+        userFarms.find((f) => f.id === session.farm.id) ||
+        userFarms[0] ||
+        (session.user.id === DEFAULT_USER.id ? DEFAULT_FARM : fallbackFarm);
       setFarm(activeFarm);
 
       const farmSoil = localDb.getSoilByFarmId(activeFarm.id);
@@ -164,8 +178,8 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
     return { success: false, error: res.error };
   };
 
-  const register = (data: RegisterPayload) => {
-    localDb.register({
+  const register = (data: RegisterPayload): { success: boolean; error?: string } => {
+    const res = localDb.register({
       name: data.name,
       mobile: data.mobile || data.email?.split("@")[0] || "9876543210",
       password: data.password || "password123",
@@ -182,16 +196,24 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
       irrigationType: data.irrigationType,
     });
 
+    if (!res.success) {
+      return { success: false, error: res.error };
+    }
+
     syncFromLocalDb();
+    return { success: true };
   };
 
   const addFarm = (newFarmData: Omit<DemoFarm, "id">) => {
+    const session = localDb.getActiveSession();
+    const currentUserId = user.id || session.user.id;
+    const currentUserName = user.name || session.user.name;
     const farmId = `farm-${newFarmData.country.toLowerCase()}-${Date.now().toString().slice(-4)}`;
     localDb.saveFarm({
       id: farmId,
-      userId: user.id || "farmer-001",
+      userId: currentUserId,
       name: newFarmData.name,
-      owner: newFarmData.owner,
+      owner: currentUserName || newFarmData.owner,
       location: newFarmData.location,
       country: newFarmData.country,
       latitude: newFarmData.latitude,
@@ -205,6 +227,7 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     });
 
+    localDb.setActiveFarm(farmId);
     syncFromLocalDb();
   };
 
@@ -214,12 +237,13 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteFarm = (farmId: string) => {
-    const currentFarms = localDb.getFarms();
-    if (currentFarms.length <= 1) return;
-    const remaining = currentFarms.filter((f) => f.id !== farmId);
+    const allFarms = localDb.getFarms();
+    const remaining = allFarms.filter((f) => f.id !== farmId);
     localStorage.setItem("brics_farms_db", JSON.stringify(remaining));
-    if (farm.id === farmId) {
-      localDb.setActiveFarm(remaining[0].id);
+
+    const userRemaining = localDb.getFarmsByUserId(user.id, user.name).filter((f) => f.id !== farmId);
+    if (farm.id === farmId && userRemaining.length > 0) {
+      localDb.setActiveFarm(userRemaining[0].id);
     }
     syncFromLocalDb();
   };
@@ -231,6 +255,11 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
 
   const resetDatabase = () => {
     localDb.resetToDefaults();
+    syncFromLocalDb();
+  };
+
+  const clearDatabase = () => {
+    localDb.clearAll();
     syncFromLocalDb();
   };
 
@@ -249,6 +278,7 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
         deleteFarm,
         logout,
         resetDatabase,
+        clearDatabase,
       }}
     >
       {children}
