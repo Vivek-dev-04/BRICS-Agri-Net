@@ -358,11 +358,11 @@ export default function DatabaseViewerPage() {
         {/* Quick Links */}
         <div className="flex items-center justify-between pt-4 border-t border-slate-200 text-xs text-slate-500">
           <Link
-            href="/dashboard"
+            href="/farms"
             className="flex items-center gap-1.5 font-bold text-emerald-800 hover:underline"
           >
             <ArrowLeft className="h-4 w-4" />
-            <span>Back to Farm Dashboard</span>
+            <span>Back to My Farms</span>
           </Link>
 
           <Link

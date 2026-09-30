@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { DemoFarm } from "@/lib/mock-data";
-import { localDb, StoredUser, StoredFarm, StoredSoilData } from "@/lib/db/localStorageDb";
+import { localDb, StoredSoilData } from "@/lib/db/localStorageDb";
 
 export interface UserProfile {
   id?: string;
@@ -93,7 +93,10 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
         region: session.user.region,
       });
 
-      const allFarms = localDb.getFarms().map((f) => ({
+      // Strictly load ONLY farms belonging to the current authenticated user
+      const userFarmsList = localDb.getFarmsByUserId(session.user.id, session.user.name);
+
+      const userFarms = userFarmsList.map((f) => ({
         id: f.id,
         name: f.name,
         owner: f.owner,
@@ -109,9 +112,19 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
         soilType: f.soilType,
       }));
 
-      setFarms(allFarms);
+      setFarms(userFarms);
 
-      const activeFarm = allFarms.find((f) => f.id === session.farm.id) || allFarms[0];
+      const fallbackFarm: DemoFarm = {
+        ...DEFAULT_FARM,
+        id: `farm-${session.user.country.toLowerCase()}-${session.user.id.slice(-4)}`,
+        name: `${session.user.name}'s Farm`,
+        owner: session.user.name,
+        location: session.user.region,
+      };
+      const activeFarm =
+        userFarms.find((f) => f.id === session.farm.id) ||
+        userFarms[0] ||
+        (session.user.id === DEFAULT_USER.id ? DEFAULT_FARM : fallbackFarm);
       setFarm(activeFarm);
 
       const farmSoil = localDb.getSoilByFarmId(activeFarm.id);
@@ -186,12 +199,15 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addFarm = (newFarmData: Omit<DemoFarm, "id">) => {
+    const session = localDb.getActiveSession();
+    const currentUserId = user.id || session.user.id;
+    const currentUserName = user.name || session.user.name;
     const farmId = `farm-${newFarmData.country.toLowerCase()}-${Date.now().toString().slice(-4)}`;
     localDb.saveFarm({
       id: farmId,
-      userId: user.id || "farmer-001",
+      userId: currentUserId,
       name: newFarmData.name,
-      owner: newFarmData.owner,
+      owner: currentUserName || newFarmData.owner,
       location: newFarmData.location,
       country: newFarmData.country,
       latitude: newFarmData.latitude,
@@ -205,6 +221,7 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     });
 
+    localDb.setActiveFarm(farmId);
     syncFromLocalDb();
   };
 
@@ -214,12 +231,13 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
   };
 
   const deleteFarm = (farmId: string) => {
-    const currentFarms = localDb.getFarms();
-    if (currentFarms.length <= 1) return;
-    const remaining = currentFarms.filter((f) => f.id !== farmId);
+    const allFarms = localDb.getFarms();
+    const remaining = allFarms.filter((f) => f.id !== farmId);
     localStorage.setItem("brics_farms_db", JSON.stringify(remaining));
-    if (farm.id === farmId) {
-      localDb.setActiveFarm(remaining[0].id);
+
+    const userRemaining = localDb.getFarmsByUserId(user.id, user.name).filter((f) => f.id !== farmId);
+    if (farm.id === farmId && userRemaining.length > 0) {
+      localDb.setActiveFarm(userRemaining[0].id);
     }
     syncFromLocalDb();
   };

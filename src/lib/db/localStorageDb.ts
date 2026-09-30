@@ -7,8 +7,6 @@
  * 4. Active Auth Session
  */
 
-import { inferSoilFromCoordinates } from "@/lib/auth/soilGeoService";
-
 export interface StoredUser {
   id: string;
   name: string;
@@ -277,6 +275,38 @@ class LocalStorageDatabase {
     return this.getFarms().find((f) => f.id === farmId);
   }
 
+  public getFarmsByUserId(userId?: string, userName?: string): StoredFarm[] {
+    const all = this.getFarms();
+    const cleanUserId = (userId || "").trim();
+    const cleanUserName = (userName || "").toLowerCase().trim();
+
+    // Direct match by userId or owner
+    const userFarms = all.filter((f) => {
+      if (cleanUserId && f.userId && f.userId.trim() === cleanUserId) return true;
+      if (cleanUserName && f.owner) {
+        const o = f.owner.toLowerCase().trim();
+        if (o === cleanUserName) return true;
+        // Never match default seed farmer (Ram Singh) unless user is Ram Singh
+        if (cleanUserName !== DEFAULT_USER.name.toLowerCase() && o === DEFAULT_USER.name.toLowerCase()) {
+          return false;
+        }
+        if (cleanUserName.includes(o) || o.includes(cleanUserName)) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    if (userFarms.length > 0) return userFarms;
+
+    // If it's the demo seed farmer (farmer-001 / Ram Singh), return default seed farm
+    if (cleanUserId === DEFAULT_USER.id || cleanUserName === DEFAULT_USER.name.toLowerCase()) {
+      return [DEFAULT_FARM];
+    }
+
+    return [];
+  }
+
   public saveFarm(farm: StoredFarm): void {
     if (!this.isBrowser()) return;
     const farms = this.getFarms();
@@ -364,8 +394,8 @@ class LocalStorageDatabase {
     localStorage.setItem(STORAGE_KEYS.ACTIVE_USER_ID, user.id);
     localStorage.setItem(STORAGE_KEYS.AUTH_STATUS, "true");
 
-    // Match farm for this user or first available farm
-    const userFarms = this.getFarms().filter((f) => f.userId === user.id);
+    // Match farm for this user strictly
+    const userFarms = this.getFarmsByUserId(user.id, user.name);
     if (userFarms.length > 0) {
       localStorage.setItem(STORAGE_KEYS.ACTIVE_FARM_ID, userFarms[0].id);
     }
@@ -447,14 +477,22 @@ class LocalStorageDatabase {
   } {
     this.init();
     const users = this.getUsers();
-    const farms = this.getFarms();
 
     const activeUserId = this.isBrowser() ? localStorage.getItem(STORAGE_KEYS.ACTIVE_USER_ID) : null;
     const activeFarmId = this.isBrowser() ? localStorage.getItem(STORAGE_KEYS.ACTIVE_FARM_ID) : null;
     const authStatus = this.isBrowser() ? localStorage.getItem(STORAGE_KEYS.AUTH_STATUS) === "true" : true;
 
     const user = users.find((u) => u.id === activeUserId) || users[0] || DEFAULT_USER;
-    const farm = farms.find((f) => f.id === activeFarmId) || farms.find((f) => f.userId === user.id) || farms[0] || DEFAULT_FARM;
+    const userFarms = this.getFarmsByUserId(user.id, user.name);
+    const fallbackFarm: StoredFarm = {
+      ...DEFAULT_FARM,
+      id: `farm-${user.country.toLowerCase()}-${user.id.slice(-4)}`,
+      userId: user.id,
+      name: `${user.name}'s Farm`,
+      owner: user.name,
+      location: user.region,
+    };
+    const farm = userFarms.find((f) => f.id === activeFarmId) || userFarms[0] || (user.id === DEFAULT_USER.id ? DEFAULT_FARM : fallbackFarm);
     const soil = this.getSoilByFarmId(farm.id);
 
     return {

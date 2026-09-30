@@ -25,8 +25,7 @@ export function Navbar() {
   };
 
   const navLinks = [
-    { name: "Farm Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    { name: "Farm Registry", href: "/farms", icon: Sprout },
+    { name: "My Farms", href: "/farms", icon: Sprout },
     { name: "BRICS Network", href: "/brics-network", icon: Globe2 },
     { name: "Database (DB)", href: "/db", icon: Database },
   ];
@@ -101,7 +100,7 @@ export function Navbar() {
             <nav className="hidden md:flex items-center gap-2">
               {navLinks.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                const isActive = pathname === item.href || (item.href === "/farms" && pathname === "/dashboard");
                 return (
                   <Link
                     key={item.href}

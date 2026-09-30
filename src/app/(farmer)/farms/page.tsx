@@ -399,6 +399,15 @@ export default function FarmsPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {farms.length === 0 && (
+              <div className="col-span-full py-8 text-center bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+                <Sprout className="h-10 w-10 text-emerald-700 mx-auto mb-2" />
+                <h4 className="text-base font-bold text-slate-900">No Farm Parcels Registered Yet</h4>
+                <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto">
+                  You haven&apos;t added any farm parcels to your account. Click &quot;Add New Farm Parcel&quot; below to register your land and start receiving weather forecasts and AI advisories.
+                </p>
+              </div>
+            )}
             {farms.map((f) => {
               const isActive = f.id === activeFarm.id;
               return (
