@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { prisma, isDatabaseConfigured } from "@/lib/prisma";
 import { findServerFarmerByMobile } from "@/lib/db/serverDb";
 
 export async function GET(request: NextRequest) {
@@ -24,24 +24,26 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // 2. Check PostgreSQL / Prisma if available
-  try {
-    const existingUser = await prisma.user.findFirst({
-      where: {
-        email: `${mobile}@brics-agri.net`,
-      },
-    });
-
-    if (existingUser) {
-      return NextResponse.json({
-        success: true,
-        exists: true,
-        name: existingUser.name,
-        message: `An account is already registered with mobile number +91 ${mobile}.`,
+  // 2. Check PostgreSQL / Prisma ONLY IF configured
+  if (isDatabaseConfigured()) {
+    try {
+      const existingUser = await prisma.user.findFirst({
+        where: {
+          email: `${mobile}@brics-agri.net`,
+        },
       });
+
+      if (existingUser) {
+        return NextResponse.json({
+          success: true,
+          exists: true,
+          name: existingUser.name,
+          message: `An account is already registered with mobile number +91 ${mobile}.`,
+        });
+      }
+    } catch {
+      // Ignore database connection errors
     }
-  } catch {
-    // Ignore database connection errors
   }
 
   return NextResponse.json({

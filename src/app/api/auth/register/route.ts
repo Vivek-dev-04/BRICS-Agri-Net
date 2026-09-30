@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { inferSoilFromCoordinates, inferRegionFromCoordinates } from "@/lib/auth/soilGeoService";
-import { prisma } from "@/lib/prisma";
+import { prisma, isDatabaseConfigured } from "@/lib/prisma";
 import { findServerFarmerByMobile, saveServerFarmer } from "@/lib/db/serverDb";
 
 const RegisterSchema = z.object({
@@ -53,24 +53,26 @@ export async function POST(request: Request) {
       );
     }
 
-    // 2. Check PostgreSQL / Prisma if configured
-    try {
-      const existingUser = await prisma.user.findFirst({
-        where: { email: `${cleanMobile}@brics-agri.net` },
-      });
+    // 2. Check PostgreSQL / Prisma ONLY IF configured
+    if (isDatabaseConfigured()) {
+      try {
+        const existingUser = await prisma.user.findFirst({
+          where: { email: `${cleanMobile}@brics-agri.net` },
+        });
 
-      if (existingUser) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: `A farmer account is already registered with mobile number +91 ${cleanMobile} (${existingUser.name || "Farmer"}). Please sign in to your existing account.`,
-            code: "MOBILE_ALREADY_EXISTS",
-          },
-          { status: 409 }
-        );
+        if (existingUser) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: `A farmer account is already registered with mobile number +91 ${cleanMobile} (${existingUser.name || "Farmer"}). Please sign in to your existing account.`,
+              code: "MOBILE_ALREADY_EXISTS",
+            },
+            { status: 409 }
+          );
+        }
+      } catch {
+        // Prisma offline, continue with serverDb persistence
       }
-    } catch {
-      // Prisma offline, continue with serverDb persistence
     }
 
     const farmId = `farm-${data.country.toLowerCase()}-${Date.now().toString().slice(-4)}`;
@@ -113,48 +115,50 @@ export async function POST(request: Request) {
       createdAt: new Date().toISOString(),
     });
 
-    // 4. Also persist to PostgreSQL / Prisma if available
+    // 4. Also persist to PostgreSQL / Prisma ONLY IF configured
     let persistentFarmId = farmId;
-    try {
-      const dbUser = await prisma.user.create({
-        data: {
-          name: data.name.trim(),
-          email: `${cleanMobile}@brics-agri.net`,
-          country: data.country,
-        },
-      });
+    if (isDatabaseConfigured()) {
+      try {
+        const dbUser = await prisma.user.create({
+          data: {
+            name: data.name.trim(),
+            email: `${cleanMobile}@brics-agri.net`,
+            country: data.country,
+          },
+        });
 
-      const createdFarm = await prisma.farm.create({
-        data: {
-          userId: dbUser.id,
-          name: farmName,
-          location: finalRegion,
-          latitude: lat,
-          longitude: lng,
-          area: data.areaAcres,
-          soilType: finalSoilType,
-          cropVariety: "High-Yield Hybrid",
-          irrigationType: data.irrigationType,
-          sowingDate: new Date(),
-        },
-      });
+        const createdFarm = await prisma.farm.create({
+          data: {
+            userId: dbUser.id,
+            name: farmName,
+            location: finalRegion,
+            latitude: lat,
+            longitude: lng,
+            area: data.areaAcres,
+            soilType: finalSoilType,
+            cropVariety: "High-Yield Hybrid",
+            irrigationType: data.irrigationType,
+            sowingDate: new Date(),
+          },
+        });
 
-      persistentFarmId = createdFarm.id;
+        persistentFarmId = createdFarm.id;
 
-      await prisma.soilData.create({
-        data: {
-          farmId: createdFarm.id,
-          nitrogen: finalSoilType.includes("Alluvial") ? 245 : 180,
-          phosphorus: 24,
-          potassium: 310,
-          ph: 7.2,
-          organicCarbon: 0.65,
-          moisture: 30,
-          soilScore: 84,
-        },
-      });
-    } catch {
-      // Continues gracefully if database is not yet configured or offline
+        await prisma.soilData.create({
+          data: {
+            farmId: createdFarm.id,
+            nitrogen: finalSoilType.includes("Alluvial") ? 245 : 180,
+            phosphorus: 24,
+            potassium: 310,
+            ph: 7.2,
+            organicCarbon: 0.65,
+            moisture: 30,
+            soilScore: 84,
+          },
+        });
+      } catch {
+        // Continues gracefully if database is not yet configured or offline
+      }
     }
 
     return NextResponse.json({
