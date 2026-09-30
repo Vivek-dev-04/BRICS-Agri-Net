@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { inferSoilFromCoordinates, inferRegionFromCoordinates } from "@/lib/auth/soilGeoService";
 import { prisma } from "@/lib/prisma";
+import { findServerFarmerByMobile, saveServerFarmer } from "@/lib/db/serverDb";
 
 const RegisterSchema = z.object({
   name: z.string().min(2, "Please enter your full name."),
@@ -37,8 +38,42 @@ export async function POST(request: Request) {
     }
 
     const data = result.data;
-    const farmId = `farm-${data.country.toLowerCase()}-${Date.now().toString().slice(-4)}`;
+    const cleanMobile = data.mobile.replace(/\D/g, "");
 
+    // 1. Check server-side registered farmers first
+    const existingServerFarmer = findServerFarmerByMobile(cleanMobile);
+    if (existingServerFarmer) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `A farmer account is already registered with mobile number +91 ${cleanMobile} (${existingServerFarmer.name}). Please sign in to your existing account.`,
+          code: "MOBILE_ALREADY_EXISTS",
+        },
+        { status: 409 }
+      );
+    }
+
+    // 2. Check PostgreSQL / Prisma if configured
+    try {
+      const existingUser = await prisma.user.findFirst({
+        where: { email: `${cleanMobile}@brics-agri.net` },
+      });
+
+      if (existingUser) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `A farmer account is already registered with mobile number +91 ${cleanMobile} (${existingUser.name || "Farmer"}). Please sign in to your existing account.`,
+            code: "MOBILE_ALREADY_EXISTS",
+          },
+          { status: 409 }
+        );
+      }
+    } catch {
+      // Prisma offline, continue with serverDb persistence
+    }
+
+    const farmId = `farm-${data.country.toLowerCase()}-${Date.now().toString().slice(-4)}`;
     const lat = data.latitude ?? 26.9124;
     const lng = data.longitude ?? 75.7873;
 
@@ -52,27 +87,47 @@ export async function POST(request: Request) {
       ? `${data.district}, ${data.state}`
       : inferredRegion.region;
 
-    // Optional persistence to Supabase / PostgreSQL via Prisma if configured
+    const farmName = data.farmName || `${data.name}'s Farm`;
+
+    // 3. Save to server-side persistent database
+    saveServerFarmer({
+      id: `farmer-${cleanMobile.slice(-4)}-${Date.now().toString().slice(-4)}`,
+      name: data.name.trim(),
+      mobile: cleanMobile,
+      password: data.password,
+      country: data.country,
+      region: finalRegion,
+      farms: [
+        {
+          id: farmId,
+          name: farmName,
+          location: finalRegion,
+          latitude: lat,
+          longitude: lng,
+          areaAcres: data.areaAcres,
+          crop: data.crop,
+          soilType: finalSoilType,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      createdAt: new Date().toISOString(),
+    });
+
+    // 4. Also persist to PostgreSQL / Prisma if available
     let persistentFarmId = farmId;
     try {
-      let dbUser = await prisma.user.findFirst({
-        where: { email: `${data.mobile}@brics-agri.net` },
+      const dbUser = await prisma.user.create({
+        data: {
+          name: data.name.trim(),
+          email: `${cleanMobile}@brics-agri.net`,
+          country: data.country,
+        },
       });
-
-      if (!dbUser) {
-        dbUser = await prisma.user.create({
-          data: {
-            name: data.name,
-            email: `${data.mobile}@brics-agri.net`,
-            country: data.country,
-          },
-        });
-      }
 
       const createdFarm = await prisma.farm.create({
         data: {
           userId: dbUser.id,
-          name: data.farmName || `${data.name}'s Farm`,
+          name: farmName,
           location: finalRegion,
           latitude: lat,
           longitude: lng,
@@ -108,10 +163,10 @@ export async function POST(request: Request) {
       farmer: {
         id: persistentFarmId,
         name: data.name,
-        mobile: `+91 ${data.mobile}`,
+        mobile: `+91 ${cleanMobile}`,
         country: data.country,
         region: finalRegion,
-        farmName: data.farmName || `${data.name}'s Farm`,
+        farmName: farmName,
         latitude: lat,
         longitude: lng,
         areaAcres: data.areaAcres,

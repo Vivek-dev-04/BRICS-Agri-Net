@@ -416,6 +416,16 @@ class LocalStorageDatabase {
     };
   }
 
+  public isMobileRegistered(mobile: string): { registered: boolean; name?: string } {
+    const cleanMobile = mobile.replace(/\D/g, "");
+    if (!cleanMobile) return { registered: false };
+    const user = this.findUserByMobile(cleanMobile);
+    if (user) {
+      return { registered: true, name: user.name };
+    }
+    return { registered: false };
+  }
+
   public register(payload: {
     name: string;
     mobile: string;
@@ -431,16 +441,27 @@ class LocalStorageDatabase {
     sowingDate?: string;
     soilType: string;
     irrigationType?: string;
-  }): { user: StoredUser; farm: StoredFarm } {
+  }): { success: boolean; user?: StoredUser; farm?: StoredFarm; error?: string } {
     this.init();
 
-    const userId = `farmer-${payload.mobile.slice(-4)}-${Date.now().toString().slice(-4)}`;
+    const cleanMobile = payload.mobile.replace(/\D/g, "");
+
+    // STRICT CHECK: Reject if a farmer account with this mobile number already exists!
+    const existingUser = this.findUserByMobile(cleanMobile);
+    if (existingUser) {
+      return {
+        success: false,
+        error: `A farmer account with mobile number +91 ${cleanMobile} (${existingUser.name}) is already registered. Please sign in instead.`,
+      };
+    }
+
+    const userId = `farmer-${cleanMobile.slice(-4)}-${Date.now().toString().slice(-4)}`;
     const farmId = `farm-${payload.country.toLowerCase()}-${Date.now().toString().slice(-4)}`;
 
     const newUser: StoredUser = {
       id: userId,
-      name: payload.name,
-      mobile: payload.mobile.replace(/\D/g, ""),
+      name: payload.name.trim(),
+      mobile: cleanMobile,
       password: payload.password,
       country: payload.country,
       region: payload.region,
@@ -451,7 +472,7 @@ class LocalStorageDatabase {
       id: farmId,
       userId: userId,
       name: payload.farmName || `${payload.name}'s Farm`,
-      owner: payload.name,
+      owner: payload.name.trim(),
       location: payload.region,
       country: payload.country,
       latitude: payload.latitude,
@@ -476,7 +497,7 @@ class LocalStorageDatabase {
       localStorage.setItem(STORAGE_KEYS.AUTH_STATUS, "true");
     }
 
-    return { user: newUser, farm: newFarm };
+    return { success: true, user: newUser, farm: newFarm };
   }
 
   public getActiveSession(): {

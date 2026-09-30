@@ -36,6 +36,7 @@ export default function FarmsPage() {
 
   // Form states for adding new parcel
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
   const [location, setLocation] = useState(user.region || "Jaipur, Rajasthan");
   const [country, setCountry] = useState<"IN" | "BR" | "RU" | "CN" | "ZA">(user.country || "IN");
   const [area, setArea] = useState("2.5");
@@ -129,10 +130,22 @@ export default function FarmsPage() {
 
   const handleCreateFarm = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !location) return;
+    const cleanName = name.trim();
+    if (!cleanName || !location) return;
+
+    // Check duplicate farm name for this farmer
+    const isDuplicate = farms.some(
+      (f) => f.name.trim().toLowerCase() === cleanName.toLowerCase()
+    );
+    if (isDuplicate) {
+      setNameError(
+        `You already have a farm registered with the name "${cleanName}". Please specify a distinct parcel name.`
+      );
+      return;
+    }
 
     addFarm({
-      name,
+      name: cleanName,
       owner: user.name,
       location,
       country,
@@ -148,6 +161,7 @@ export default function FarmsPage() {
 
     setIsCreating(false);
     setName("");
+    setNameError(null);
 
     // Directly navigate to dashboard to view the stats of this farm
     router.push("/dashboard");
@@ -268,9 +282,17 @@ export default function FarmsPage() {
                   required
                   placeholder="e.g. South Ridge Mustard Field"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="gov-input"
+                  onChange={(e) => {
+                    setName(e.target.value);
+                    if (nameError) setNameError(null);
+                  }}
+                  className={`gov-input ${nameError ? "border-red-500 ring-2 ring-red-500/20" : ""}`}
                 />
+                {nameError && (
+                  <p className="text-[11px] text-red-600 font-semibold mt-1">
+                    {nameError}
+                  </p>
+                )}
               </div>
 
               {/* Village / District */}

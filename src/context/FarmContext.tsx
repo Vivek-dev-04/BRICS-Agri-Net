@@ -38,7 +38,7 @@ interface FarmContextType {
   soil: StoredSoilData;
   isAuthenticated: boolean;
   login: (mobileOrEmail: string, password?: string) => { success: boolean; error?: string };
-  register: (data: RegisterPayload) => void;
+  register: (data: RegisterPayload) => { success: boolean; error?: string };
   addFarm: (farm: Omit<DemoFarm, "id">) => void;
   switchFarm: (farmId: string) => void;
   deleteFarm: (farmId: string) => void;
@@ -178,8 +178,8 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
     return { success: false, error: res.error };
   };
 
-  const register = (data: RegisterPayload) => {
-    localDb.register({
+  const register = (data: RegisterPayload): { success: boolean; error?: string } => {
+    const res = localDb.register({
       name: data.name,
       mobile: data.mobile || data.email?.split("@")[0] || "9876543210",
       password: data.password || "password123",
@@ -196,7 +196,12 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
       irrigationType: data.irrigationType,
     });
 
+    if (!res.success) {
+      return { success: false, error: res.error };
+    }
+
     syncFromLocalDb();
+    return { success: true };
   };
 
   const addFarm = (newFarmData: Omit<DemoFarm, "id">) => {

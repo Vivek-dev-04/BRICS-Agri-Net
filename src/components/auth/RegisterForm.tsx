@@ -32,6 +32,7 @@ import {
 } from "@/lib/auth/soilGeoService";
 import { geocodeAddress, GeocodingResult } from "@/lib/services/geocodingService";
 import { useFarm } from "@/context/FarmContext";
+import { localDb } from "@/lib/db/localStorageDb";
 
 const PRESET_CROPS = [
   { id: "Wheat", labelEn: "Wheat", labelHi: "गेहूं", emoji: "🌾" },
@@ -191,6 +192,9 @@ export function RegisterForm() {
   const [coordinatesSource, setCoordinatesSource] = useState<"address" | "gps" | "preset" | null>(null);
   const [resolvedAddressName, setResolvedAddressName] = useState<string | null>(null);
 
+  const [isCheckingMobile, setIsCheckingMobile] = useState(false);
+  const [existingUserWarning, setExistingUserWarning] = useState<{ name: string; mobile: string } | null>(null);
+
   // Request browser GPS permission and infer soil & region
   const requestGpsLocation = () => {
     if (!navigator.geolocation) {
@@ -288,11 +292,27 @@ export function RegisterForm() {
     if (errors.gps) setErrors((prev) => ({ ...prev, gps: "" }));
   };
 
-  // Handle Mobile input
+  // Handle Mobile input with instant duplicate check
   const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "").slice(0, 10);
     setMobile(raw);
+    setExistingUserWarning(null);
     if (errors.mobile) setErrors((prev) => ({ ...prev, mobile: "" }));
+
+    // Instant local check when 10 digits entered
+    if (raw.length === 10) {
+      const localUser = localDb.findUserByMobile(raw);
+      if (localUser) {
+        setExistingUserWarning({ name: localUser.name, mobile: raw });
+        setErrors((prev) => ({
+          ...prev,
+          mobile:
+            language === "hi"
+              ? `यह मोबाइल नंबर किसान "${localUser.name}" के खाते से पहले ही पंजीकृत है। कृपया लॉगिन करें।`
+              : `A farmer account is already registered with +91 ${raw} (${localUser.name}). Please sign in.`,
+        }));
+      }
+    }
   };
 
   // Step 1 Validation
@@ -305,6 +325,16 @@ export function RegisterForm() {
     const mobileVal = validateIndianMobile(mobile);
     if (!mobileVal.isValid) {
       newErrors.mobile = mobileVal.error || "Please enter a valid 10-digit mobile number.";
+    } else {
+      const clean = mobile.replace(/\D/g, "");
+      const localUser = localDb.findUserByMobile(clean);
+      if (localUser) {
+        newErrors.mobile =
+          language === "hi"
+            ? `यह मोबाइल नंबर किसान "${localUser.name}" के खाते से पहले ही पंजीकृत है। कृपया लॉगिन करें।`
+            : `A farmer account is already registered with +91 ${clean} (${localUser.name}). Please sign in.`;
+        setExistingUserWarning({ name: localUser.name, mobile: clean });
+      }
     }
 
     const passVal = validatePassword(password);
@@ -356,9 +386,50 @@ export function RegisterForm() {
   };
 
   // Multi-Page Navigation Handlers
-  const goToNextPage = () => {
+  const goToNextPage = async () => {
     setServerError(null);
-    if (currentPage === 1 && validateStep1()) {
+    if (currentPage === 1) {
+      if (!validateStep1()) return;
+
+      const clean = mobile.replace(/\D/g, "");
+
+      // 1. Double check local storage database
+      const localUser = localDb.findUserByMobile(clean);
+      if (localUser) {
+        setErrors((prev) => ({
+          ...prev,
+          mobile:
+            language === "hi"
+              ? `यह मोबाइल नंबर किसान "${localUser.name}" के खाते से पहले ही पंजीकृत है। कृपया लॉगिन करें।`
+              : `A farmer account is already registered with +91 ${clean} (${localUser.name}). Please sign in.`,
+        }));
+        setExistingUserWarning({ name: localUser.name, mobile: clean });
+        return;
+      }
+
+      // 2. Double check server database via API
+      setIsCheckingMobile(true);
+      try {
+        const res = await fetch(`/api/auth/check-mobile?mobile=${clean}`);
+        const data = await res.json();
+        if (data.exists) {
+          setErrors((prev) => ({
+            ...prev,
+            mobile:
+              language === "hi"
+                ? `यह मोबाइल नंबर किसान "${data.name || "किसान"}" के लिए पहले ही पंजीकृत है। कृपया लॉगिन करें।`
+                : `A farmer account is already registered with +91 ${clean} (${data.name || "Farmer"}). Please sign in.`,
+          }));
+          setExistingUserWarning({ name: data.name || "Farmer", mobile: clean });
+          setIsCheckingMobile(false);
+          return;
+        }
+      } catch (err) {
+        console.warn("Mobile check error:", err);
+      } finally {
+        setIsCheckingMobile(false);
+      }
+
       setCurrentPage(2);
     } else if (currentPage === 2 && validateStep2()) {
       setCurrentPage(3);
@@ -413,8 +484,9 @@ export function RegisterForm() {
       }
 
       // 2. Synchronize with FarmContext for immediate application hydration
-      registerInContext({
+      const ctxRes = registerInContext({
         name: name.trim(),
+        mobile: mobile.trim(),
         email: `${mobile.trim()}@brics-agri.net`,
         password,
         country: "IN",
@@ -429,6 +501,12 @@ export function RegisterForm() {
         soilType: finalSoil,
         irrigationType,
       });
+
+      if (!ctxRes.success) {
+        setServerError(ctxRes.error || "Failed to register farmer account. Please login if you already have an account.");
+        setIsLoading(false);
+        return;
+      }
 
       // 3. Move to Page 4 (Success Card)
       setRegisteredSummary({
@@ -682,6 +760,35 @@ export function RegisterForm() {
                 <span>{errors.mobile}</span>
               </p>
             )}
+
+            {/* Account Already Exists Warning Banner */}
+            {existingUserWarning && (
+              <div className="rounded-xl border border-amber-300 bg-amber-50 p-3.5 space-y-2 text-xs text-amber-950 animate-in fade-in duration-200 mt-2">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-bold">
+                      {language === "hi"
+                        ? `खाता पहले से मौजूद है: ${existingUserWarning.name} (+91 ${existingUserWarning.mobile})`
+                        : `Account Already Registered: ${existingUserWarning.name} (+91 ${existingUserWarning.mobile})`}
+                    </p>
+                    <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">
+                      {language === "hi"
+                        ? "इस मोबाइल नंबर के साथ पहले से ही एक किसान खाता पंजीकृत है। यदि आप नया खेत जोड़ना चाहते हैं, तो कृपया लॉगिन करें और अपने डैशबोर्ड से '+ नया खेत जोड़ें' पर क्लिक करें।"
+                        : "A farmer account is already registered with this mobile number. If you wish to register a new farm parcel, please log in to your dashboard and use '+ Register New Farm'."}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 pl-6 pt-1">
+                  <Link
+                    href={`/login?mobile=${existingUserWarning.mobile}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-800 text-white font-bold text-xs hover:bg-emerald-700 transition-colors shadow-2xs"
+                  >
+                    <span>{language === "hi" ? "लॉगिन करें →" : "Sign In to Existing Account →"}</span>
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Password & Confirm Password */}
@@ -750,10 +857,20 @@ export function RegisterForm() {
             <button
               type="button"
               onClick={goToNextPage}
-              className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 text-sm transition-all shadow-md focus:outline-none focus:ring-3 focus:ring-emerald-700/30"
+              disabled={isCheckingMobile || !!existingUserWarning}
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-white font-bold py-3.5 px-4 text-sm transition-all shadow-md focus:outline-none focus:ring-3 focus:ring-emerald-700/30 disabled:opacity-60"
             >
-              <span>{t.btnNext}</span>
-              <ArrowRight className="h-4 w-4" />
+              {isCheckingMobile ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Verifying Mobile...</span>
+                </>
+              ) : (
+                <>
+                  <span>{t.btnNext}</span>
+                  <ArrowRight className="h-4 w-4" />
+                </>
+              )}
             </button>
           </div>
         </div>

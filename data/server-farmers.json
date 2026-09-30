@@ -1,0 +1,46 @@
+[
+  {
+    "id": "farmer-001",
+    "name": "Ram Singh",
+    "mobile": "9876543210",
+    "password": "password123",
+    "country": "IN",
+    "region": "Jaipur Zone, Rajasthan",
+    "farms": [
+      {
+        "id": "farm-in-001",
+        "name": "Ram Singh Farm",
+        "location": "Jaipur Zone, Rajasthan, India",
+        "latitude": 26.9124,
+        "longitude": 75.7873,
+        "areaAcres": 4.5,
+        "crop": "Wheat",
+        "soilType": "Sandy Loam",
+        "createdAt": "2026-01-15T00:00:00.000Z"
+      }
+    ],
+    "createdAt": "2026-01-15T00:00:00.000Z"
+  },
+  {
+    "id": "farmer-4455-8084",
+    "name": "Pooja Sharma",
+    "mobile": "9822334455",
+    "password": "password123",
+    "country": "IN",
+    "region": "Jaipur Zone, Rajasthan",
+    "farms": [
+      {
+        "id": "farm-in-8084",
+        "name": "Pooja Sharma's Farm",
+        "location": "Jaipur Zone, Rajasthan",
+        "latitude": 26.9124,
+        "longitude": 75.7873,
+        "areaAcres": 2.8,
+        "crop": "Mustard",
+        "soilType": "Sandy Loam",
+        "createdAt": "2026-09-30T07:44:58.084Z"
+      }
+    ],
+    "createdAt": "2026-09-30T07:44:58.084Z"
+  }
+]

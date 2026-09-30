@@ -26,10 +26,11 @@ interface AddFarmModalProps {
 }
 
 export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) {
-  const { user, addFarm } = useFarm();
+  const { user, farms, addFarm } = useFarm();
 
   // Basic Form States
   const [name, setName] = useState("");
+  const [nameError, setNameError] = useState<string | null>(null);
   const [location, setLocation] = useState("");
   const [country, setCountry] = useState<"IN" | "BR" | "RU" | "CN" | "ZA">(user.country || "IN");
   const [area, setArea] = useState("2.5");
@@ -133,12 +134,24 @@ export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) 
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) return;
+    const cleanName = name.trim();
+    if (!cleanName) return;
+
+    // Check duplicate farm name for this farmer
+    const isDuplicate = farms.some(
+      (f) => f.name.trim().toLowerCase() === cleanName.toLowerCase()
+    );
+    if (isDuplicate) {
+      setNameError(
+        `You already have a farm registered with the name "${cleanName}". Please specify a distinct plot name (e.g. "${cleanName} - Plot 2").`
+      );
+      return;
+    }
 
     const farmLoc = location.trim() || addressQuery.trim() || `${latitude.toFixed(4)}°N, ${longitude.toFixed(4)}°E`;
 
     addFarm({
-      name: name.trim(),
+      name: cleanName,
       owner: user.name,
       location: farmLoc,
       country,
@@ -196,9 +209,17 @@ export function AddFarmModal({ isOpen, onClose, onSuccess }: AddFarmModalProps) 
                 required
                 placeholder="e.g. South Ridge Mustard Field"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="gov-input"
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (nameError) setNameError(null);
+                }}
+                className={`gov-input ${nameError ? "border-red-500 ring-2 ring-red-500/20" : ""}`}
               />
+              {nameError && (
+                <p className="text-[11px] text-red-600 font-semibold mt-1">
+                  {nameError}
+                </p>
+              )}
             </div>
 
             <div>
