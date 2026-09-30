@@ -1,5 +1,39 @@
 import { decodeWmoCode, computeAgroRisks, getFallbackWeather } from "./weatherService";
 
+// Type-safe test harness for Next.js build compatibility without extra runner dependencies
+function describe(_name: string, fn: () => void) {
+  fn();
+}
+
+function it(_name: string, fn: () => void) {
+  fn();
+}
+
+function expect<T>(actual: T) {
+  return {
+    toBe(expected: T) {
+      if (actual !== expected) {
+        throw new Error(`Expected ${expected} but got ${actual}`);
+      }
+    },
+    toEqual(expected: unknown) {
+      if (JSON.stringify(actual) !== JSON.stringify(expected)) {
+        throw new Error(`Expected ${JSON.stringify(expected)} but got ${JSON.stringify(actual)}`);
+      }
+    },
+    toContain(expected: string) {
+      if (typeof actual !== "string" || !actual.includes(expected)) {
+        throw new Error(`Expected "${actual}" to contain "${expected}"`);
+      }
+    },
+    toBeGreaterThan(expected: number) {
+      if (typeof actual !== "number" || actual <= expected) {
+        throw new Error(`Expected ${actual} to be greater than ${expected}`);
+      }
+    },
+  };
+}
+
 describe("Open-Meteo Weather Service", () => {
   it("decodes WMO weather interpretation codes accurately", () => {
     expect(decodeWmoCode(0)).toEqual({ text: "Clear Sky", icon: "sun" });
