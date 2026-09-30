@@ -124,6 +124,7 @@ INSTRUCTIONS:
 4. In the "diseaseRisk" section, address potential fungal/pest pathogen risks based on the temperature, humidity, and crop.
 5. In the "regenerative" section, recommend sustainable soil-carbon and moisture-conserving practices (e.g., mulching, biochar, legume rotation).
 6. Provide all recommendation text in ${language}.
+7. Keep each section concise, direct, and under 80 words for readability. Do not include unescaped quotes or raw control characters inside JSON strings.
 
 RETURN STRICTLY A JSON OBJECT WITH THIS EXACT SCHEMA (NO MARKDOWN WRAPPERS, NO CODE BLOCKS, RAW JSON ONLY):
 {
@@ -169,7 +170,7 @@ RETURN STRICTLY A JSON OBJECT WITH THIS EXACT SCHEMA (NO MARKDOWN WRAPPERS, NO C
           generationConfig: {
             temperature: 0.2,
             topP: 0.8,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 4096,
             responseMimeType: "application/json",
             thinkingConfig: {
               thinkingBudget: 0,
@@ -182,7 +183,6 @@ RETURN STRICTLY A JSON OBJECT WITH THIS EXACT SCHEMA (NO MARKDOWN WRAPPERS, NO C
 
       if (!response.ok) {
         if (response.status === 404) {
-          // Model not found in this region/key tier, try next candidate
           continue;
         }
         const errText = await response.text();
@@ -195,9 +195,11 @@ RETURN STRICTLY A JSON OBJECT WITH THIS EXACT SCHEMA (NO MARKDOWN WRAPPERS, NO C
 
       if (!rawText) continue;
 
-      // Clean potential markdown quotes
-      const cleaned = rawText.replace(/```json/gi, "").replace(/```/g, "").trim();
-      const parsed = JSON.parse(cleaned);
+      const parsed = safeExtractJson(rawText);
+      if (!parsed) {
+        console.warn(`Failed to parse structured JSON from model ${model}, trying next candidate.`);
+        continue;
+      }
 
       return {
         id: `adv-gemini-${Date.now().toString().slice(-6)}`,
@@ -230,6 +232,36 @@ RETURN STRICTLY A JSON OBJECT WITH THIS EXACT SCHEMA (NO MARKDOWN WRAPPERS, NO C
   }
 
   return null;
+}
+
+interface ParsedAdvisoryJson {
+  cropHealthStatus?: string;
+  irrigation?: { urgency?: "Low" | "Moderate" | "High" | "Critical"; recommendation?: string };
+  soil?: { urgency?: "Low" | "Medium" | "High"; recommendation?: string };
+  diseaseRisk?: { urgency?: "Low" | "Moderate" | "High"; recommendation?: string };
+  regenerative?: { urgency?: "Proactive" | "Recommended" | "Essential"; recommendation?: string };
+}
+
+function safeExtractJson(raw: string): ParsedAdvisoryJson | null {
+  if (!raw) return null;
+  let text = raw.replace(/```json/gi, "").replace(/```/g, "").trim();
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start !== -1 && end !== -1 && end > start) {
+    text = text.substring(start, end + 1);
+  }
+  try {
+    return JSON.parse(text) as ParsedAdvisoryJson;
+  } catch {
+    try {
+      const sanitized = text.replace(/[\u0000-\u001F]+/g, (match) => {
+        return match === "\n" || match === "\r" ? " " : "";
+      });
+      return JSON.parse(sanitized) as ParsedAdvisoryJson;
+    } catch {
+      return null;
+    }
+  }
 }
 
 /**
