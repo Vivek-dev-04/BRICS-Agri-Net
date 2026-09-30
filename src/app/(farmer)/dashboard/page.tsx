@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import {
@@ -8,6 +9,7 @@ import {
   DEMO_ADVISORY,
 } from "@/lib/mock-data";
 import { useFarm } from "@/context/FarmContext";
+import { WeatherData } from "@/lib/services/weatherService";
 import {
   AlertTriangle,
   ArrowRight,
@@ -26,6 +28,20 @@ import {
 
 export default function DashboardPage() {
   const { farm, user, soil } = useFarm();
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+
+  useEffect(() => {
+    const lat = farm.latitude || 26.9124;
+    const lon = farm.longitude || 75.7873;
+    fetch(`/api/weather?lat=${lat}&lon=${lon}`)
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.data) {
+          setWeather(data.data);
+        }
+      })
+      .catch((err) => console.error("Dashboard weather fetch error:", err));
+  }, [farm.latitude, farm.longitude]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
@@ -127,16 +143,23 @@ export default function DashboardPage() {
                 <span>Weather Risk</span>
                 <CloudSun className="h-4 w-4 text-amber-600" />
               </div>
-              <div className="mt-2.5 text-2xl font-bold text-amber-700">
-                {DEMO_HEALTH_SCORES.weatherRisk}
+              <div className="mt-2.5 text-2xl font-bold text-amber-700 capitalize">
+                {weather?.agroRisks.waterStress.level.toLowerCase() ?? DEMO_HEALTH_SCORES.weatherRisk}
               </div>
               <div className="mt-2 w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                 <div
-                  className="bg-amber-500 h-1.5 rounded-full"
-                  style={{ width: `${DEMO_HEALTH_SCORES.weatherRiskScore}%` }}
+                  className={`h-1.5 rounded-full ${
+                    weather?.agroRisks.waterStress.level === "CRITICAL"
+                      ? "bg-red-600 w-4/5"
+                      : weather?.agroRisks.waterStress.level === "HIGH"
+                      ? "bg-amber-600 w-3/5"
+                      : "bg-emerald-500 w-2/5"
+                  }`}
                 />
               </div>
-              <p className="mt-2 text-[11px] text-slate-600">Low 48h rain probability</p>
+              <p className="mt-2 text-[11px] text-slate-600">
+                {weather?.agroRisks.waterStress.title ?? "Low 48h rain probability"}
+              </p>
             </div>
 
             {/* Soil Health */}
@@ -321,20 +344,36 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-1.5 text-xs font-bold text-slate-800">
                   <CloudSun className="h-4 w-4 text-blue-700" />
                   <span>Local Meteorological Station</span>
+                  {weather?.isLive && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  )}
                 </div>
                 <Link href="/weather" className="text-xs text-blue-800 font-semibold hover:underline">
-                  5-Day →
+                  7-Day Forecast →
                 </Link>
               </div>
 
               <div className="flex items-center justify-between pt-1">
                 <div>
-                  <div className="text-3xl font-extrabold text-slate-900">{DEMO_WEATHER.current.temp}°C</div>
-                  <p className="text-xs text-slate-600 mt-0.5">{DEMO_WEATHER.current.condition}</p>
+                  <div className="text-3xl font-extrabold text-slate-900">
+                    {weather?.current.temp ?? DEMO_WEATHER.current.temp}°C
+                  </div>
+                  <p className="text-xs text-slate-600 mt-0.5">
+                    {weather?.current.weatherText ?? DEMO_WEATHER.current.condition}
+                  </p>
                 </div>
                 <div className="text-right text-xs text-slate-600 space-y-1">
-                  <div>Humidity: <strong className="text-slate-900">{DEMO_WEATHER.current.humidity}%</strong></div>
-                  <div>Wind: <strong className="text-slate-900">{DEMO_WEATHER.current.windSpeedKmh} km/h</strong></div>
+                  <div>
+                    Humidity: <strong className="text-slate-900">{weather?.current.humidity ?? DEMO_WEATHER.current.humidity}%</strong>
+                  </div>
+                  <div>
+                    Wind: <strong className="text-slate-900">{weather?.current.windSpeedKmh ?? DEMO_WEATHER.current.windSpeedKmh} km/h</strong>
+                  </div>
+                  {weather?.current.soilMoisturePercent !== undefined && (
+                    <div className="text-[11px] text-emerald-800 font-semibold">
+                      Soil Moisture: {weather.current.soilMoisturePercent}%
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
