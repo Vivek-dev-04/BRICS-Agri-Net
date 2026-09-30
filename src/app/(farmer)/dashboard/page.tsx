@@ -26,6 +26,7 @@ import {
   Sprout,
   TrendingDown,
   Info,
+  Compass,
 } from "lucide-react";
 import { AddFarmModal } from "@/components/farmer/AddFarmModal";
 
@@ -112,6 +113,13 @@ export default function DashboardPage() {
               >
                 <Sparkles className="h-3.5 w-3.5" />
                 Generate Advisory
+              </Link>
+              <Link
+                href="/crop-planner"
+                className="flex items-center gap-1.5 rounded-lg border border-teal-600 bg-teal-50 px-3.5 py-2 text-xs font-bold text-teal-900 hover:bg-teal-100 transition-colors shadow-2xs"
+              >
+                <Compass className="h-3.5 w-3.5 text-teal-700" />
+                <span>What to Plant?</span>
               </Link>
               <Link
                 href="/disease"

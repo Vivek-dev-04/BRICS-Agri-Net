@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Sprout, LayoutDashboard, Globe2, User, LogOut, ArrowRight, Database } from "lucide-react";
+import { Sprout, LayoutDashboard, Globe2, User, LogOut, ArrowRight, Database, Compass } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFarm } from "@/context/FarmContext";
 
@@ -26,6 +26,7 @@ export function Navbar() {
 
   const navLinks = [
     { name: "My Farms", href: "/farms", icon: Sprout },
+    { name: "Crop Planner", href: "/crop-planner", icon: Compass },
     { name: "BRICS Network", href: "/brics-network", icon: Globe2 },
     { name: "Database (DB)", href: "/db", icon: Database },
   ];
