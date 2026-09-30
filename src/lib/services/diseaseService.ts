@@ -108,6 +108,63 @@ const BRICS_PATHOLOGY_KNOWLEDGE_BASE: Record<string, Omit<DiseaseDiagnosisResult
       "Apply straw mulch to prevent soil spores from splashing onto lower leaves during irrigation.",
     ],
   },
+  "soybean-rust": {
+    diseaseName: "Asian Soybean Rust (Phakopsora pachyrhizi)",
+    scientificName: "Phakopsora pachyrhizi",
+    crop: "Soybean",
+    confidence: 0.95,
+    severity: "Critical",
+    isHealthy: false,
+    symptoms: "Minute tan-to-dark brown polygonal lesions on underside of leaves with volcano-shaped raised pustules causing premature defoliation.",
+    organicRemedy: "Foliar application of Bacillus subtilis (10g/L) combined with 2% neem seed oil as early prophylactic barrier.",
+    chemicalRemedy: "Foliar spray of Azoxystrobin + Cyproconazole (0.6ml/L) or Picoxystrobin + Tebuconazole (1ml/L) immediately upon first sighting.",
+    treatments: [
+      "Apply multisite fungicide (Mancozeb or Copper Oxychloride) before canopy closure.",
+      "Rotate with triazole-strobilurin mixtures to mitigate pathogen fungicide resistance.",
+    ],
+    preventiveMeasures: [
+      "Plant early-maturing cultivars to escape peak late-season inoculum build-up.",
+      "Observe strict sanitary break (empty period without host plants) before next planting season.",
+    ],
+  },
+  "maize-blight": {
+    diseaseName: "Southern Corn Leaf Blight (Bipolaris maydis)",
+    scientificName: "Bipolaris maydis",
+    crop: "Maize",
+    confidence: 0.92,
+    severity: "Moderate",
+    isHealthy: false,
+    symptoms: "Elongated, rectangular buff to grayish lesions between leaf veins with reddish-brown margins.",
+    organicRemedy: "Bio-spray of Trichoderma viride @ 5g/liter mixed with 1% fermented cattle urine.",
+    chemicalRemedy: "Spray Azoxystrobin 18.2% + Difenoconazole 11.4% SC @ 1ml/L or Mancozeb 75% WP @ 2g/L.",
+    treatments: [
+      "Spot spray affected field patches when lower leaf lesions reach ear level.",
+      "Ensure proper balanced potassium fertilization to bolster stalk and leaf cuticle strength.",
+    ],
+    preventiveMeasures: [
+      "Deep plow maize residues post-harvest to bury overwintering mycelia.",
+      "Practice 2-year crop rotation with legumes or oilseeds.",
+    ],
+  },
+  "mustard-white-rust": {
+    diseaseName: "Mustard White Rust / Blister (Albugo candida)",
+    scientificName: "Albugo candida",
+    crop: "Mustard",
+    confidence: 0.90,
+    severity: "Moderate",
+    isHealthy: false,
+    symptoms: "Prominent raised creamy-white chalky blisters on the lower surface of leaves, accompanied by floral malformation (staghead).",
+    organicRemedy: "Spray 5% garlic bulb extract (50g crushed in 1L water) or fresh wood ash dusting in morning dew.",
+    chemicalRemedy: "Spray Metalaxyl 8% + Mancozeb 64% WP (Ridomil MZ) @ 2g/L at initial symptom appearance.",
+    treatments: [
+      "Foliar spray of Metalaxyl-Mancozeb (2g/L) followed by Mancozeb (2g/L) 15 days later.",
+      "Rogue out and destroy staghead malformed inflorescences immediately.",
+    ],
+    preventiveMeasures: [
+      "Treat seeds with Apron 35 SD @ 6g/kg seed before sowing.",
+      "Avoid late sowing; sow between October 10 and October 25.",
+    ],
+  },
   "healthy-leaf": {
     diseaseName: "Healthy Crop Leaf (No Disease Detected)",
     scientificName: "Vegetative Foliage",
@@ -127,6 +184,87 @@ const BRICS_PATHOLOGY_KNOWLEDGE_BASE: Record<string, Omit<DiseaseDiagnosisResult
     ],
   },
 };
+
+export const BRICS_PATHOLOGY_SAMPLES = [
+  { id: "wheat-rust", name: "Wheat Brown/Leaf Rust", pathogen: "Puccinia triticina", crop: "Wheat", risk: "Moderate" as const },
+  { id: "rice-blast", name: "Rice Blast", pathogen: "Magnaporthe oryzae", crop: "Rice / Paddy", risk: "High" as const },
+  { id: "cotton-curl", name: "Cotton Leaf Curl", pathogen: "Begomovirus (Whitefly)", crop: "Cotton", risk: "High" as const },
+  { id: "soybean-rust", name: "Asian Soybean Rust", pathogen: "Phakopsora pachyrhizi", crop: "Soybean", risk: "Critical" as const },
+  { id: "maize-blight", name: "Corn Leaf Blight", pathogen: "Bipolaris maydis", crop: "Maize", risk: "Moderate" as const },
+  { id: "mustard-white-rust", name: "Mustard White Rust", pathogen: "Albugo candida", crop: "Mustard", risk: "Moderate" as const },
+  { id: "tomato-blight", name: "Tomato Early Blight", pathogen: "Alternaria solani", crop: "Tomato", risk: "Moderate" as const },
+  { id: "healthy-leaf", name: "Healthy Crop Foliage", pathogen: "Zero Pathological Lesions", crop: "Field Crop", risk: "Low" as const },
+];
+
+export interface BricsSurveillanceAlert {
+  id: string;
+  country: "IN" | "BR" | "RU" | "CN" | "ZA";
+  countryName: string;
+  pathogen: string;
+  targetCrop: string;
+  riskLevel: "Monitoring" | "Moderate" | "High" | "Critical";
+  region: string;
+  advisoryNote: string;
+  updatedAt: string;
+}
+
+export const BRICS_SURVEILLANCE_ALERTS: BricsSurveillanceAlert[] = [
+  {
+    id: "surv-in-01",
+    country: "IN",
+    countryName: "India",
+    pathogen: "Wheat Stripe / Brown Rust (Puccinia triticina)",
+    targetCrop: "Wheat",
+    riskLevel: "Moderate",
+    region: "Punjab, Haryana & Western UP Plains",
+    advisoryNote: "Microclimate relative humidity > 75% favoring urediniospore dispersal. Visual scouting recommended every 4 days.",
+    updatedAt: "2026-09-30T06:00:00Z",
+  },
+  {
+    id: "surv-br-02",
+    country: "BR",
+    countryName: "Brazil",
+    pathogen: "Asian Soybean Rust (Phakopsora pachyrhizi)",
+    targetCrop: "Soybean",
+    riskLevel: "Critical",
+    region: "Mato Grosso & Goiás Cerrado",
+    advisoryNote: "First spore showers detected in commercial soybean corridors. Apply multisite protective fungicides before canopy closure.",
+    updatedAt: "2026-09-29T18:00:00Z",
+  },
+  {
+    id: "surv-ru-03",
+    country: "RU",
+    countryName: "Russia",
+    pathogen: "Fusarium Head Blight & Snow Mold (Microdochium nivale)",
+    targetCrop: "Winter Wheat / Rye",
+    riskLevel: "Moderate",
+    region: "Krasnodar & Rostov Oblasts",
+    advisoryNote: "Pre-winter frost hardening surveillance active. Seed treatment with fludioxonil completed across 85% acreage.",
+    updatedAt: "2026-09-28T12:00:00Z",
+  },
+  {
+    id: "surv-cn-04",
+    country: "CN",
+    countryName: "China",
+    pathogen: "Paddy Blast & Bacterial Leaf Streak (Xanthomonas)",
+    targetCrop: "Rice",
+    riskLevel: "High",
+    region: "Hunan & Jiangxi Yangtze River Basin",
+    advisoryNote: "Post-typhoon moisture saturated fields. Unmanned aerial vehicle (UAV) bio-spray operations underway.",
+    updatedAt: "2026-09-30T04:30:00Z",
+  },
+  {
+    id: "surv-za-05",
+    country: "ZA",
+    countryName: "South Africa",
+    pathogen: "Fall Armyworm (Spodoptera frugiperda) & Maize Rust",
+    targetCrop: "White Maize",
+    riskLevel: "High",
+    region: "Free State & North West Provinces",
+    advisoryNote: "Emergence of second generation instars in young seedling whorls. Pheromone trap thresholds exceeded.",
+    updatedAt: "2026-09-29T10:15:00Z",
+  },
+];
 
 function safeExtractJson(raw: string): any {
   try {
@@ -273,13 +411,21 @@ Reply ONLY with the valid JSON object.`;
   }
 
   // Default Fallback: Intelligent Match from Knowledge Base based on crop
-  const defaultKey = req.crop?.toLowerCase().includes("rice")
-    ? "rice-blast"
-    : req.crop?.toLowerCase().includes("cotton")
-    ? "cotton-curl"
-    : req.crop?.toLowerCase().includes("tomato")
-    ? "tomato-blight"
-    : "wheat-rust";
+  const cropLower = (req.crop || "").toLowerCase();
+  const defaultKey =
+    cropLower.includes("rice") || cropLower.includes("paddy")
+      ? "rice-blast"
+      : cropLower.includes("cotton")
+      ? "cotton-curl"
+      : cropLower.includes("soybean") || cropLower.includes("soya")
+      ? "soybean-rust"
+      : cropLower.includes("maize") || cropLower.includes("corn")
+      ? "maize-blight"
+      : cropLower.includes("mustard") || cropLower.includes("rapeseed")
+      ? "mustard-white-rust"
+      : cropLower.includes("tomato") || cropLower.includes("vegetable")
+      ? "tomato-blight"
+      : "wheat-rust";
 
   const fallback = BRICS_PATHOLOGY_KNOWLEDGE_BASE[defaultKey];
   return {

@@ -49,6 +49,24 @@ export interface StoredSoilData {
   updatedAt: string;
 }
 
+export interface StoredDiseaseRecord {
+  id: string;
+  farmId: string;
+  crop: string;
+  diseaseName: string;
+  scientificName?: string;
+  severity: "Low" | "Moderate" | "High" | "Critical";
+  confidence: number;
+  isHealthy: boolean;
+  symptoms: string;
+  organicRemedy: string;
+  chemicalRemedy: string;
+  engine: string;
+  diagnosedAt: string;
+  status: "Under Observation" | "Remedy Applied" | "Resolved";
+  notes?: string;
+}
+
 // Initial Seed Data for Demo Farmer
 const DEFAULT_USER: StoredUser = {
   id: "farmer-001",
@@ -78,10 +96,31 @@ const DEFAULT_FARM: StoredFarm = {
   createdAt: "2026-01-15T00:00:00.000Z",
 };
 
+const DEFAULT_DISEASE_RECORDS: StoredDiseaseRecord[] = [
+  {
+    id: "diag-in-001",
+    farmId: "farm-in-001",
+    crop: "Wheat",
+    diseaseName: "Wheat Brown/Leaf Rust (Puccinia triticina)",
+    scientificName: "Puccinia triticina",
+    severity: "Moderate",
+    confidence: 0.94,
+    isHealthy: false,
+    symptoms: "Scattered circular to oval orange-brown powdery pustules on upper leaf blades.",
+    organicRemedy: "Foliar spray of 5% Neem Seed Kernel Extract (NSKE) or sour buttermilk (1L in 15L water).",
+    chemicalRemedy: "Propiconazole 25% EC @ 1ml per liter of water during early morning calm conditions.",
+    engine: "Google Gemini 2.5 Flash Vision",
+    diagnosedAt: "2026-09-28T09:30:00.000Z",
+    status: "Remedy Applied",
+    notes: "Applied 5% NSKE on 2 acres border zone; pustule spread stopped.",
+  },
+];
+
 const STORAGE_KEYS = {
   USERS: "brics_users_db",
   FARMS: "brics_farms_db",
   SOIL: "brics_soil_db",
+  DISEASE: "brics_disease_db",
   ACTIVE_USER_ID: "brics_active_user_id",
   ACTIVE_FARM_ID: "brics_active_farm_id",
   AUTH_STATUS: "brics_auth",
@@ -226,6 +265,10 @@ class LocalStorageDatabase {
 
     if (!localStorage.getItem(STORAGE_KEYS.SOIL)) {
       localStorage.setItem(STORAGE_KEYS.SOIL, JSON.stringify([]));
+    }
+
+    if (!localStorage.getItem(STORAGE_KEYS.DISEASE)) {
+      localStorage.setItem(STORAGE_KEYS.DISEASE, JSON.stringify(DEFAULT_DISEASE_RECORDS));
     }
 
     if (!localStorage.getItem(STORAGE_KEYS.AUTH_STATUS)) {
@@ -374,6 +417,53 @@ class LocalStorageDatabase {
       records.push(soil);
     }
     localStorage.setItem(STORAGE_KEYS.SOIL, JSON.stringify(records));
+  }
+
+  // -------------------------------------------------------------
+  // DISEASE PATHOLOGY REPOSITORY
+  // -------------------------------------------------------------
+  public getDiseaseRecords(farmId?: string): StoredDiseaseRecord[] {
+    if (!this.isBrowser()) return [];
+    this.init();
+    try {
+      const data = localStorage.getItem(STORAGE_KEYS.DISEASE);
+      const records: StoredDiseaseRecord[] = data ? JSON.parse(data) : [];
+      if (farmId) {
+        return records.filter((r) => r.farmId === farmId);
+      }
+      return records;
+    } catch {
+      return [];
+    }
+  }
+
+  public saveDiseaseRecord(record: StoredDiseaseRecord): void {
+    if (!this.isBrowser()) return;
+    this.init();
+    const records = this.getDiseaseRecords();
+    const existingIndex = records.findIndex((r) => r.id === record.id);
+    if (existingIndex >= 0) {
+      records[existingIndex] = { ...records[existingIndex], ...record };
+    } else {
+      records.unshift(record);
+    }
+    localStorage.setItem(STORAGE_KEYS.DISEASE, JSON.stringify(records));
+  }
+
+  public updateDiseaseRecordStatus(id: string, status: StoredDiseaseRecord["status"]): void {
+    if (!this.isBrowser()) return;
+    const records = this.getDiseaseRecords();
+    const match = records.find((r) => r.id === id);
+    if (match) {
+      match.status = status;
+      localStorage.setItem(STORAGE_KEYS.DISEASE, JSON.stringify(records));
+    }
+  }
+
+  public deleteDiseaseRecord(id: string): void {
+    if (!this.isBrowser()) return;
+    const records = this.getDiseaseRecords().filter((r) => r.id !== id);
+    localStorage.setItem(STORAGE_KEYS.DISEASE, JSON.stringify(records));
   }
 
   // -------------------------------------------------------------
@@ -549,6 +639,7 @@ class LocalStorageDatabase {
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.FARMS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.SOIL, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.DISEASE, JSON.stringify([]));
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_USER_ID);
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_FARM_ID);
     localStorage.setItem(STORAGE_KEYS.AUTH_STATUS, "false");
@@ -562,6 +653,7 @@ class LocalStorageDatabase {
     const defaultSoil = generateSoilMetrics(DEFAULT_FARM.soilType);
     defaultSoil.farmId = DEFAULT_FARM.id;
     localStorage.setItem(STORAGE_KEYS.SOIL, JSON.stringify([defaultSoil]));
+    localStorage.setItem(STORAGE_KEYS.DISEASE, JSON.stringify(DEFAULT_DISEASE_RECORDS));
     localStorage.setItem(STORAGE_KEYS.ACTIVE_USER_ID, DEFAULT_USER.id);
     localStorage.setItem(STORAGE_KEYS.ACTIVE_FARM_ID, DEFAULT_FARM.id);
     localStorage.setItem(STORAGE_KEYS.AUTH_STATUS, "true");
