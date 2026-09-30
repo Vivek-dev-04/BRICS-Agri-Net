@@ -2,8 +2,9 @@
 
 import React from "react";
 import { Globe2 } from "lucide-react";
+import { BricsLanguage } from "@/lib/i18n/languages";
 
-export type SupportedLanguage = "en" | "hi";
+export type SupportedLanguage = BricsLanguage;
 
 interface LanguageSelectorProps {
   currentLanguage: SupportedLanguage;
@@ -28,6 +29,9 @@ export function LanguageSelector({
       >
         <option value="en">English</option>
         <option value="hi">हिंदी (Hindi)</option>
+        <option value="pt">Português (Portuguese)</option>
+        <option value="ru">Русский (Russian)</option>
+        <option value="zh">中文 (Chinese)</option>
       </select>
     </div>
   );

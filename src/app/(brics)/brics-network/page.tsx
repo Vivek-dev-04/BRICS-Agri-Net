@@ -15,6 +15,7 @@ import {
   runBricsModelSimulation,
 } from "@/lib/services/bricsModelsService";
 import { DEMO_BRICS_COUNTRIES } from "@/lib/mock-data";
+import { useLanguage } from "@/context/LanguageContext";
 import {
   Globe2,
   Building2,
@@ -51,6 +52,7 @@ const COUNTRY_NAMES: Record<string, string> = {
 };
 
 export default function BricsNetworkPage() {
+  const { t } = useLanguage();
   const [activeTab, setActiveTab] = useState<MainTab>("commons");
 
   // ---------------------------------------------------------------------------
@@ -410,7 +412,7 @@ export default function BricsNetworkPage() {
                   className="flex items-center gap-1.5 rounded-lg bg-emerald-800 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm self-start sm:self-auto"
                 >
                   <Plus className="h-3.5 w-3.5" />
-                  Publish Field Practice
+                  {t.commons.publishPractice}
                 </button>
               </div>
 
@@ -439,7 +441,7 @@ export default function BricsNetworkPage() {
                 <div className="md:col-span-8 flex flex-wrap items-center gap-1.5">
                   <span className="text-xs font-semibold text-slate-500 mr-1">Nation:</span>
                   {[
-                    { code: "ALL", label: "All BRICS" },
+                    { code: "ALL", label: `[ALL] ${t.common.all}` },
                     { code: "IN", label: "[IN] India" },
                     { code: "BR", label: "[BR] Brazil" },
                     { code: "RU", label: "[RU] Russia" },

@@ -5,10 +5,13 @@ import { usePathname } from "next/navigation";
 import { Sprout, LayoutDashboard, Globe2, User, LogOut, ArrowRight, Database, Compass, ScanEye, Code2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useFarm } from "@/context/FarmContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { LanguageSelector } from "@/components/LanguageSelector";
 
 export function Navbar() {
   const pathname = usePathname();
   const { user, farm, isAuthenticated, logout } = useFarm();
+  const { t } = useLanguage();
 
   const isPublicPage =
     pathname === "/" ||
@@ -25,11 +28,11 @@ export function Navbar() {
   };
 
   const navLinks = [
-    { name: "My Farms", href: "/farms", icon: Sprout },
-    { name: "Crop Planner", href: "/crop-planner", icon: Compass },
-    { name: "Disease Diagnostics", href: "/disease", icon: ScanEye },
-    { name: "BRICS Commons & Models", href: "/brics-network", icon: Globe2 },
-    { name: "Database (DB)", href: "/db", icon: Database },
+    { name: t.nav.myFarms, href: "/farms", icon: Sprout },
+    { name: t.nav.cropPlanner, href: "/crop-planner", icon: Compass },
+    { name: t.nav.diseaseDiagnostics, href: "/disease", icon: ScanEye },
+    { name: t.nav.bricsCommons, href: "/brics-network", icon: Globe2 },
+    { name: t.nav.database, href: "/db", icon: Database },
   ];
 
   return (
@@ -50,26 +53,18 @@ export function Navbar() {
               className="hover:text-emerald-300 transition-colors flex items-center gap-1 font-mono text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded border border-slate-700 text-slate-300"
             >
               <Code2 className="h-3 w-3 text-emerald-400" />
-              <span>CADS API</span>
+              <span>{t.nav.cadsApi}</span>
             </Link>
             <Link
               href="/db"
               className="hover:text-emerald-300 transition-colors flex items-center gap-1 font-mono text-[10px] bg-slate-800 hover:bg-slate-700 px-2 py-0.5 rounded border border-slate-700 text-emerald-400"
             >
               <Database className="h-3 w-3" />
-              <span>Inspect DB</span>
+              <span>{t.nav.inspectDb}</span>
             </Link>
-            <div className="flex items-center gap-1.5 font-mono text-slate-400 text-[10px]">
-              <span>IN</span>
-              <span className="text-slate-600">•</span>
-              <span>BR</span>
-              <span className="text-slate-600">•</span>
-              <span>RU</span>
-              <span className="text-slate-600">•</span>
-              <span>CN</span>
-              <span className="text-slate-600">•</span>
-              <span>ZA</span>
-            </div>
+
+            {/* Multilingual Selector in Top Ribbon */}
+            <LanguageSelector variant="compact" />
           </div>
         </div>
       </div>
@@ -104,7 +99,7 @@ export function Navbar() {
               className="flex items-center gap-2 rounded-lg bg-emerald-800 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm"
             >
               <User className="h-4 w-4" />
-              <span>Sign In / Register</span>
+              <span>{t.nav.signIn}</span>
             </Link>
           </div>
         ) : (
@@ -157,7 +152,7 @@ export function Navbar() {
                     href="/"
                     onClick={logout}
                     className="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 hover:text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors"
-                    title="Sign Out / Switch Farmer"
+                    title={t.nav.signOut}
                   >
                     <LogOut className="h-4 w-4" />
                   </Link>
@@ -168,7 +163,7 @@ export function Navbar() {
                   className="flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm"
                 >
                   <User className="h-3.5 w-3.5" />
-                  <span>Farmer Sign In</span>
+                  <span>{t.nav.signIn}</span>
                 </Link>
               )}
             </div>

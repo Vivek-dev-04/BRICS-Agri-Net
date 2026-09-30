@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { Navbar } from "@/components/Navbar";
 import { useFarm } from "@/context/FarmContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { BricsLanguage, getLlmLanguageName } from "@/lib/i18n/languages";
 import { WeatherData } from "@/lib/services/weatherService";
 import { AgroAdvisoryResult } from "@/lib/services/advisoryService";
 import {
@@ -28,11 +30,11 @@ import Link from "next/link";
 
 export default function AdvisoryPage() {
   const { farm, farms, switchFarm, soil } = useFarm();
+  const { language, setLanguage, t, localeInfo } = useLanguage();
   const [advisory, setAdvisory] = useState<AgroAdvisoryResult | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [hasGeminiKey, setHasGeminiKey] = useState<boolean>(false);
-  const [language, setLanguage] = useState("English");
   const [feedbackGiven, setFeedbackGiven] = useState(false);
   const [viewMode, setViewMode] = useState<"farmer" | "technical">("farmer");
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -51,9 +53,10 @@ export default function AdvisoryPage() {
 
   // Fetch weather and trigger AI Advisory synthesis when farm or language changes
   const runSynthesis = useCallback(
-    async (langOverride?: string) => {
+    async (langOverride?: BricsLanguage) => {
       setIsSynthesizing(true);
-      const targetLang = langOverride || language;
+      const activeCode = langOverride || language;
+      const targetLang = getLlmLanguageName(activeCode);
 
       try {
         const lat = farm.latitude || 26.9124;
@@ -97,14 +100,13 @@ export default function AdvisoryPage() {
     [farm, soil, weather, language]
   );
 
-  // Initial synthesis on mount / farm switch
+  // Initial synthesis on mount / farm switch / language switch
   useEffect(() => {
     runSynthesis();
-  }, [farm.id]);
+  }, [farm.id, language]);
 
-  const handleLanguageChange = (newLang: string) => {
+  const handleLanguageChange = (newLang: BricsLanguage) => {
     setLanguage(newLang);
-    runSynthesis(newLang);
   };
 
   // Text-To-Speech for Farmers
@@ -119,25 +121,15 @@ export default function AdvisoryPage() {
 
     if (!advisory) return;
 
-    const fullSpeech = `Agro advisory for ${advisory.crop}. 
-      Irrigation recommendation: ${advisory.irrigation.recommendation}. 
-      Soil and nutrient recommendation: ${advisory.soil.recommendation}. 
-      Pest and disease alert: ${advisory.diseaseRisk.recommendation}. 
-      Regenerative agriculture step: ${advisory.regenerative.recommendation}.`;
+    const fullSpeech = `${t.advisory.title} for ${advisory.crop}. 
+      ${t.advisory.irrigationTitle}: ${advisory.irrigation.recommendation}. 
+      ${t.advisory.soilTitle}: ${advisory.soil.recommendation}. 
+      ${t.advisory.diseaseTitle}: ${advisory.diseaseRisk.recommendation}. 
+      ${t.advisory.regenerativeTitle}: ${advisory.regenerative.recommendation}.`;
 
     const utterance = new SpeechSynthesisUtterance(fullSpeech);
     utterance.rate = 0.92;
-
-    const langMap: Record<string, string> = {
-      English: "en-US",
-      Hindi: "hi-IN",
-      Portuguese: "pt-BR",
-      Russian: "ru-RU",
-      Chinese: "zh-CN",
-    };
-    if (langMap[language]) {
-      utterance.lang = langMap[language];
-    }
+    utterance.lang = localeInfo.speechLocale;
 
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -219,14 +211,14 @@ export default function AdvisoryPage() {
             {/* Multi-lingual Selector */}
             <select
               value={language}
-              onChange={(e) => handleLanguageChange(e.target.value)}
+              onChange={(e) => handleLanguageChange(e.target.value as BricsLanguage)}
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-800 font-semibold shadow-xs"
             >
-              <option value="English">Language: English</option>
-              <option value="Hindi">भाषा: हिन्दी (Hindi)</option>
-              <option value="Portuguese">Idioma: Português</option>
-              <option value="Russian">Язык: Русский</option>
-              <option value="Chinese">语言: 中文 (Chinese)</option>
+              <option value="en">[EN] English</option>
+              <option value="hi">[HI] हिन्दी (Hindi)</option>
+              <option value="pt">[PT] Português</option>
+              <option value="ru">[RU] Русский</option>
+              <option value="zh">[ZH] 中文 (Chinese)</option>
             </select>
 
             {/* Listen Aloud Button */}
@@ -242,12 +234,12 @@ export default function AdvisoryPage() {
               {isSpeaking ? (
                 <>
                   <VolumeX className="h-3.5 w-3.5" />
-                  <span>Stop Audio</span>
+                  <span>{t.advisory.stopAudio}</span>
                 </>
               ) : (
                 <>
                   <Volume2 className="h-3.5 w-3.5" />
-                  <span>Listen Aloud</span>
+                  <span>{t.advisory.listenAloud}</span>
                 </>
               )}
             </button>
@@ -269,7 +261,7 @@ export default function AdvisoryPage() {
               className="flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${isSynthesizing ? "animate-spin" : ""}`} />
-              {isSynthesizing ? "Computing Advisory..." : "Re-Calculate"}
+              {isSynthesizing ? "..." : t.advisory.recalculate}
             </button>
           </div>
         </div>

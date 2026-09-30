@@ -4,6 +4,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { useFarm } from "@/context/FarmContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { BricsLanguage, getLlmLanguageName } from "@/lib/i18n/languages";
 import {
   DiseaseDiagnosisResult,
   BRICS_PATHOLOGY_SAMPLES,
@@ -36,11 +38,11 @@ import {
 
 export default function DiseaseDiagnosisPage() {
   const { farm, farms, switchFarm } = useFarm();
+  const { language, setLanguage, t, localeInfo } = useLanguage();
   const [analyzing, setAnalyzing] = useState(false);
   const [diagnosis, setDiagnosis] = useState<DiseaseDiagnosisResult | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
-  const [language, setLanguage] = useState("English");
   const [viewMode, setViewMode] = useState<"farmer" | "technical">("farmer");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [hasGeminiKey, setHasGeminiKey] = useState(false);
@@ -106,7 +108,7 @@ export default function DiseaseDiagnosisPage() {
           ...payload,
           crop: farm.crop,
           variety: farm.cropVariety,
-          language,
+          language: getLlmLanguageName(language),
         }),
       });
 
@@ -218,17 +220,7 @@ export default function DiseaseDiagnosisPage() {
 
     const utterance = new SpeechSynthesisUtterance(textToSpeak);
     utterance.rate = 0.92;
-
-    const langMap: Record<string, string> = {
-      English: "en-US",
-      Hindi: "hi-IN",
-      Portuguese: "pt-BR",
-      Russian: "ru-RU",
-      Chinese: "zh-CN",
-    };
-    if (langMap[language]) {
-      utterance.lang = langMap[language];
-    }
+    utterance.lang = localeInfo.speechLocale;
 
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
@@ -321,14 +313,14 @@ export default function DiseaseDiagnosisPage() {
             {/* Language Selector */}
             <select
               value={language}
-              onChange={(e) => setLanguage(e.target.value)}
+              onChange={(e) => setLanguage(e.target.value as BricsLanguage)}
               className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-emerald-800 font-semibold shadow-xs"
             >
-              <option value="English">Language: English</option>
-              <option value="Hindi">Language: हिन्दी (Hindi)</option>
-              <option value="Portuguese">Language: Português</option>
-              <option value="Russian">Language: Русский</option>
-              <option value="Chinese">Language: 中文 (Chinese)</option>
+              <option value="en">[EN] English</option>
+              <option value="hi">[HI] हिन्दी (Hindi)</option>
+              <option value="pt">[PT] Português</option>
+              <option value="ru">[RU] Русский</option>
+              <option value="zh">[ZH] 中文 (Chinese)</option>
             </select>
 
             {diagnosis && (
@@ -344,12 +336,12 @@ export default function DiseaseDiagnosisPage() {
                   {isSpeaking ? (
                     <>
                       <VolumeX className="h-3.5 w-3.5" />
-                      <span>Stop Audio</span>
+                      <span>{t.advisory.stopAudio}</span>
                     </>
                   ) : (
                     <>
                       <Volume2 className="h-3.5 w-3.5" />
-                      <span>Listen Aloud</span>
+                      <span>{t.advisory.listenAloud}</span>
                     </>
                   )}
                 </button>

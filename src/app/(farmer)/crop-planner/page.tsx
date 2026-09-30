@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Navbar } from "@/components/Navbar";
 import { useFarm } from "@/context/FarmContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { getLlmLanguageName } from "@/lib/i18n/languages";
 import { WeatherData } from "@/lib/services/weatherService";
 import { CropRecommendationResult, CropRecommendation } from "@/lib/services/cropRecommendationService";
 import {
@@ -25,6 +27,7 @@ import {
 
 export default function CropPlannerPage() {
   const { farm, farms, switchFarm, soil } = useFarm();
+  const { t, language } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [planResult, setPlanResult] = useState<CropRecommendationResult | null>(null);
@@ -62,6 +65,7 @@ export default function CropPlannerPage() {
           weather,
           targetSeason: targetSeason || season,
           priorityGoal: goal || priorityGoal,
+          language: getLlmLanguageName(language),
         }),
       });
 
@@ -135,7 +139,7 @@ export default function CropPlannerPage() {
               className="flex items-center gap-1.5 rounded-lg bg-emerald-800 px-4 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm disabled:opacity-50"
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-              {loading ? "Analyzing Field Data..." : "Re-Analyze Farm"}
+              {loading ? "..." : t.cropPlanner.reAnalyze}
             </button>
           </div>
         </div>

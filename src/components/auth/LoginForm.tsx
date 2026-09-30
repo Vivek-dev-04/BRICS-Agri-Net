@@ -7,8 +7,24 @@ import { Eye, EyeOff, Loader2, ArrowRight, AlertCircle, CheckCircle2 } from "luc
 import { LanguageSelector, SupportedLanguage } from "./LanguageSelector";
 import { validateIndianMobile, validatePassword, authenticateFarmer } from "@/lib/auth/authService";
 import { useFarm } from "@/context/FarmContext";
+import { useLanguage } from "@/context/LanguageContext";
 
-const TRANSLATIONS = {
+const TRANSLATIONS: Record<SupportedLanguage, {
+  welcome: string;
+  title: string;
+  subtitle: string;
+  mobileLabel: string;
+  mobilePlaceholder: string;
+  passwordLabel: string;
+  passwordPlaceholder: string;
+  rememberMe: string;
+  forgotPassword: string;
+  signIn: string;
+  signingIn: string;
+  noAccount: string;
+  registerFarmer: string;
+  authError: string;
+}> = {
   en: {
     welcome: "Welcome back",
     title: "Sign in to your farm",
@@ -41,11 +57,60 @@ const TRANSLATIONS = {
     registerFarmer: "किसान के रूप में पंजीकरण करें",
     authError: "हम आपको साइन इन नहीं कर सके। कृपया अपना मोबाइल नंबर और पासवर्ड जांचें और पुनः प्रयास करें।",
   },
+  pt: {
+    welcome: "Bem-vindo de volta",
+    title: "Acesse a sua propriedade",
+    subtitle: "Acesse insights da sua fazenda, previsões climáticas e orientação agronômica personalizada.",
+    mobileLabel: "Número de Celular",
+    mobilePlaceholder: "Digite seu número de celular",
+    passwordLabel: "Senha",
+    passwordPlaceholder: "Digite sua senha",
+    rememberMe: "Lembrar de mim",
+    forgotPassword: "Esqueceu a senha?",
+    signIn: "Entrar",
+    signingIn: "Entrando...",
+    noAccount: "Não possui uma conta?",
+    registerFarmer: "Cadastre-se como Produtor",
+    authError: "Não foi possível fazer login. Verifique seu número de celular e senha e tente novamente.",
+  },
+  ru: {
+    welcome: "Добро пожаловать",
+    title: "Войти в систему фермы",
+    subtitle: "Получите доступ к агрономическим данным, прогнозу погоды и персональным рекомендациям.",
+    mobileLabel: "Номер мобильного телефона",
+    mobilePlaceholder: "Введите номер телефона",
+    passwordLabel: "Пароль",
+    passwordPlaceholder: "Введите пароль",
+    rememberMe: "Запомнить меня",
+    forgotPassword: "Забыли пароль?",
+    signIn: "Войти",
+    signingIn: "Вход...",
+    noAccount: "Нет аккаунта?",
+    registerFarmer: "Зарегистрироваться как фермер",
+    authError: "Не удалось войти. Пожалуйста, проверьте номер телефона и пароль.",
+  },
+  zh: {
+    welcome: "欢迎回来",
+    title: "登录您的农场账户",
+    subtitle: "获取农场监测遥感数据、气象预报及个性化农业决策指导。",
+    mobileLabel: "手机号码",
+    mobilePlaceholder: "请输入手机号码",
+    passwordLabel: "密码",
+    passwordPlaceholder: "请输入密码",
+    rememberMe: "记住我",
+    forgotPassword: "忘记密码？",
+    signIn: "登录",
+    signingIn: "正在登录...",
+    noAccount: "还没有账户？",
+    registerFarmer: "注册新农户",
+    authError: "无法登录，请检查您的手机号码和密码后重试。",
+  },
 };
 
 export function LoginForm() {
   const router = useRouter();
   const { login: loginInContext } = useFarm();
+  const { language, setLanguage } = useLanguage();
 
   // Form State
   const [mobile, setMobile] = useState("");
@@ -59,9 +124,7 @@ export function LoginForm() {
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // Language state
-  const [language, setLanguage] = useState<SupportedLanguage>("en");
-  const t = TRANSLATIONS[language];
+  const t = TRANSLATIONS[language] || TRANSLATIONS.en;
 
   // Mobile number input formatting & cleansing
   const handleMobileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
