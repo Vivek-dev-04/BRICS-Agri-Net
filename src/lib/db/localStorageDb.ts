@@ -85,6 +85,7 @@ const STORAGE_KEYS = {
   ACTIVE_USER_ID: "brics_active_user_id",
   ACTIVE_FARM_ID: "brics_active_farm_id",
   AUTH_STATUS: "brics_auth",
+  IS_CLEARED: "brics_db_cleared",
 };
 
 /**
@@ -198,31 +199,37 @@ class LocalStorageDatabase {
   }
 
   /**
-   * Initializes database with seed records if empty
+   * Initializes database. If auto-wiped or cleared, leaves tables empty.
    */
   public init(): void {
     if (!this.isBrowser()) return;
 
+    // Automatic migration to wipe all previous data per user request
+    const WIPE_FLAG = "brics_auto_wiped_v3";
+    if (localStorage.getItem(WIPE_FLAG) !== "true") {
+      localStorage.setItem(WIPE_FLAG, "true");
+      this.clearAll();
+      return;
+    }
+
+    if (localStorage.getItem(STORAGE_KEYS.IS_CLEARED) === "true") {
+      return;
+    }
+
     if (!localStorage.getItem(STORAGE_KEYS.USERS)) {
-      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([DEFAULT_USER]));
+      localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
     }
 
     if (!localStorage.getItem(STORAGE_KEYS.FARMS)) {
-      localStorage.setItem(STORAGE_KEYS.FARMS, JSON.stringify([DEFAULT_FARM]));
-    }
-
-    if (!localStorage.getItem(STORAGE_KEYS.ACTIVE_USER_ID)) {
-      localStorage.setItem(STORAGE_KEYS.ACTIVE_USER_ID, DEFAULT_USER.id);
-    }
-
-    if (!localStorage.getItem(STORAGE_KEYS.ACTIVE_FARM_ID)) {
-      localStorage.setItem(STORAGE_KEYS.ACTIVE_FARM_ID, DEFAULT_FARM.id);
+      localStorage.setItem(STORAGE_KEYS.FARMS, JSON.stringify([]));
     }
 
     if (!localStorage.getItem(STORAGE_KEYS.SOIL)) {
-      const defaultSoil = generateSoilMetrics(DEFAULT_FARM.soilType);
-      defaultSoil.farmId = DEFAULT_FARM.id;
-      localStorage.setItem(STORAGE_KEYS.SOIL, JSON.stringify([defaultSoil]));
+      localStorage.setItem(STORAGE_KEYS.SOIL, JSON.stringify([]));
+    }
+
+    if (!localStorage.getItem(STORAGE_KEYS.AUTH_STATUS)) {
+      localStorage.setItem(STORAGE_KEYS.AUTH_STATUS, "false");
     }
   }
 
@@ -230,13 +237,13 @@ class LocalStorageDatabase {
   // USERS REPOSITORY
   // -------------------------------------------------------------
   public getUsers(): StoredUser[] {
-    if (!this.isBrowser()) return [DEFAULT_USER];
+    if (!this.isBrowser()) return [];
     this.init();
     try {
       const data = localStorage.getItem(STORAGE_KEYS.USERS);
-      return data ? JSON.parse(data) : [DEFAULT_USER];
+      return data ? JSON.parse(data) : [];
     } catch {
-      return [DEFAULT_USER];
+      return [];
     }
   }
 
@@ -261,13 +268,13 @@ class LocalStorageDatabase {
   // FARMS REPOSITORY
   // -------------------------------------------------------------
   public getFarms(): StoredFarm[] {
-    if (!this.isBrowser()) return [DEFAULT_FARM];
+    if (!this.isBrowser()) return [];
     this.init();
     try {
       const data = localStorage.getItem(STORAGE_KEYS.FARMS);
-      return data ? JSON.parse(data) : [DEFAULT_FARM];
+      return data ? JSON.parse(data) : [];
     } catch {
-      return [DEFAULT_FARM];
+      return [];
     }
   }
 
@@ -277,6 +284,8 @@ class LocalStorageDatabase {
 
   public getFarmsByUserId(userId?: string, userName?: string): StoredFarm[] {
     const all = this.getFarms();
+    if (all.length === 0) return [];
+
     const cleanUserId = (userId || "").trim();
     const cleanUserName = (userName || "").toLowerCase().trim();
 
@@ -299,9 +308,10 @@ class LocalStorageDatabase {
 
     if (userFarms.length > 0) return userFarms;
 
-    // If it's the demo seed farmer (farmer-001 / Ram Singh), return default seed farm
+    // If it's the demo seed farmer (farmer-001 / Ram Singh) and farm actually exists in database
     if (cleanUserId === DEFAULT_USER.id || cleanUserName === DEFAULT_USER.name.toLowerCase()) {
-      return [DEFAULT_FARM];
+      const demoFarm = all.find((f) => f.id === DEFAULT_FARM.id);
+      if (demoFarm) return [demoFarm];
     }
 
     return [];
@@ -480,9 +490,9 @@ class LocalStorageDatabase {
 
     const activeUserId = this.isBrowser() ? localStorage.getItem(STORAGE_KEYS.ACTIVE_USER_ID) : null;
     const activeFarmId = this.isBrowser() ? localStorage.getItem(STORAGE_KEYS.ACTIVE_FARM_ID) : null;
-    const authStatus = this.isBrowser() ? localStorage.getItem(STORAGE_KEYS.AUTH_STATUS) === "true" : true;
+    const authStatus = this.isBrowser() ? localStorage.getItem(STORAGE_KEYS.AUTH_STATUS) === "true" : false;
 
-    const user = users.find((u) => u.id === activeUserId) || users[0] || DEFAULT_USER;
+    const user = (activeUserId ? users.find((u) => u.id === activeUserId) : null) || users[0] || DEFAULT_USER;
     const userFarms = this.getFarmsByUserId(user.id, user.name);
     const fallbackFarm: StoredFarm = {
       ...DEFAULT_FARM,
@@ -513,15 +523,28 @@ class LocalStorageDatabase {
     localStorage.setItem(STORAGE_KEYS.AUTH_STATUS, "false");
   }
 
-  public resetToDefaults(): void {
+  public clearAll(): void {
     if (!this.isBrowser()) return;
-    localStorage.removeItem(STORAGE_KEYS.USERS);
-    localStorage.removeItem(STORAGE_KEYS.FARMS);
-    localStorage.removeItem(STORAGE_KEYS.SOIL);
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.FARMS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.SOIL, JSON.stringify([]));
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_USER_ID);
     localStorage.removeItem(STORAGE_KEYS.ACTIVE_FARM_ID);
-    localStorage.removeItem(STORAGE_KEYS.AUTH_STATUS);
-    this.init();
+    localStorage.setItem(STORAGE_KEYS.AUTH_STATUS, "false");
+    localStorage.setItem(STORAGE_KEYS.IS_CLEARED, "true");
+  }
+
+  public resetToDefaults(): void {
+    if (!this.isBrowser()) return;
+    localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify([DEFAULT_USER]));
+    localStorage.setItem(STORAGE_KEYS.FARMS, JSON.stringify([DEFAULT_FARM]));
+    const defaultSoil = generateSoilMetrics(DEFAULT_FARM.soilType);
+    defaultSoil.farmId = DEFAULT_FARM.id;
+    localStorage.setItem(STORAGE_KEYS.SOIL, JSON.stringify([defaultSoil]));
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_USER_ID, DEFAULT_USER.id);
+    localStorage.setItem(STORAGE_KEYS.ACTIVE_FARM_ID, DEFAULT_FARM.id);
+    localStorage.setItem(STORAGE_KEYS.AUTH_STATUS, "true");
+    localStorage.removeItem(STORAGE_KEYS.IS_CLEARED);
   }
 }
 

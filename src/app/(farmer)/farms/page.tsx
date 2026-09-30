@@ -158,17 +158,23 @@ export default function FarmsPage() {
 
           <div className="gov-card p-4 border border-slate-200 bg-white">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Active Parcel</span>
-            <div className="mt-1 text-base font-bold text-slate-900 truncate">{activeFarm.name}</div>
-            <p className="text-[11px] text-slate-500 mt-0.5">{activeFarm.crop} • {activeFarm.areaAcres} Acres</p>
+            <div className="mt-1 text-base font-bold text-slate-900 truncate">
+              {farms.length > 0 ? activeFarm.name : "None registered"}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              {farms.length > 0 ? `${activeFarm.crop} • ${activeFarm.areaAcres} Acres` : "No active parcel"}
+            </p>
           </div>
 
           <div className="gov-card p-4 border border-slate-200 bg-white">
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Telemetry Feed</span>
             <div className="mt-1 text-base font-bold text-emerald-800 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live Connected
+              <span className={`h-2 w-2 rounded-full ${farms.length > 0 ? "bg-emerald-500 animate-pulse" : "bg-slate-300"}`} />
+              {farms.length > 0 ? "Live Connected" : "Awaiting Farm"}
             </div>
-            <p className="text-[11px] text-slate-500 mt-0.5">Open-Meteo & Soil Grids</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">
+              {farms.length > 0 ? "Open-Meteo & Soil Grids" : "Register a parcel to connect"}
+            </p>
           </div>
         </div>
 

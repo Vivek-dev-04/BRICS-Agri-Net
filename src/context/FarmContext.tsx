@@ -44,6 +44,7 @@ interface FarmContextType {
   deleteFarm: (farmId: string) => void;
   logout: () => void;
   resetDatabase: () => void;
+  clearDatabase: () => void;
 }
 
 const DEFAULT_USER: UserProfile = {
@@ -75,10 +76,10 @@ const FarmContext = createContext<FarmContextType | undefined>(undefined);
 
 export function FarmProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile>(DEFAULT_USER);
-  const [farms, setFarms] = useState<DemoFarm[]>([DEFAULT_FARM]);
+  const [farms, setFarms] = useState<DemoFarm[]>([]);
   const [farm, setFarm] = useState<DemoFarm>(DEFAULT_FARM);
   const [soil, setSoil] = useState<StoredSoilData>(localDb.getSoilByFarmId(DEFAULT_FARM.id));
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   // Sync state from LocalStorage DB on mount
   const syncFromLocalDb = () => {
@@ -252,6 +253,11 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
     syncFromLocalDb();
   };
 
+  const clearDatabase = () => {
+    localDb.clearAll();
+    syncFromLocalDb();
+  };
+
   return (
     <FarmContext.Provider
       value={{
@@ -267,6 +273,7 @@ export function FarmProvider({ children }: { children: React.ReactNode }) {
         deleteFarm,
         logout,
         resetDatabase,
+        clearDatabase,
       }}
     >
       {children}

@@ -36,8 +36,15 @@ export default function DatabaseViewerPage() {
     loadData();
   }, []);
 
+  const handleClearAll = () => {
+    if (confirm("Permanently remove all data from the database? This will delete all registered farmers, farm parcels, and telemetry.")) {
+      localDb.clearAll();
+      loadData();
+    }
+  };
+
   const handleReset = () => {
-    if (confirm("Reset database to initial demo records? Any newly registered users/farms will be cleared.")) {
+    if (confirm("Load initial demo records (Ram Singh)? This will populate the demo farmer and farm parcel.")) {
       localDb.resetToDefaults();
       loadData();
     }
@@ -97,11 +104,21 @@ export default function DatabaseViewerPage() {
             </button>
 
             <button
-              onClick={handleReset}
-              className="flex items-center gap-1.5 px-3 py-2 bg-red-50 hover:bg-red-100 text-red-700 text-xs font-bold rounded-lg transition-colors border border-red-200"
+              onClick={handleClearAll}
+              className="flex items-center gap-1.5 px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
+              title="Completely remove all records from database"
             >
               <Trash2 className="h-3.5 w-3.5" />
-              <span>Reset Database</span>
+              <span>Wipe / Remove All Data</span>
+            </button>
+
+            <button
+              onClick={handleReset}
+              className="flex items-center gap-1.5 px-3 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg transition-colors border border-slate-300"
+              title="Populate demo farmer (Ram Singh) for testing"
+            >
+              <Sprout className="h-3.5 w-3.5 text-emerald-700" />
+              <span>Load Demo Records</span>
             </button>
           </div>
         </div>
@@ -225,20 +242,28 @@ export default function DatabaseViewerPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
-                  {users.map((u) => (
-                    <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="p-3 font-mono text-[11px] text-slate-500">{u.id}</td>
-                      <td className="p-3 font-bold text-slate-900">{u.name}</td>
-                      <td className="p-3 font-mono text-emerald-800 font-bold">+91 {u.mobile}</td>
-                      <td className="p-3 font-mono text-slate-500">
-                        {u.password ? "••••••••" : "N/A"}
-                      </td>
-                      <td className="p-3 text-slate-600">{u.region}</td>
-                      <td className="p-3 text-slate-400 text-[11px]">
-                        {new Date(u.createdAt).toLocaleDateString()}
+                  {users.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-8 text-center text-slate-500">
+                        No farmer accounts registered. The database is empty.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    users.map((u) => (
+                      <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="p-3 font-mono text-[11px] text-slate-500">{u.id}</td>
+                        <td className="p-3 font-bold text-slate-900">{u.name}</td>
+                        <td className="p-3 font-mono text-emerald-800 font-bold">+91 {u.mobile}</td>
+                        <td className="p-3 font-mono text-slate-500">
+                          {u.password ? "••••••••" : "N/A"}
+                        </td>
+                        <td className="p-3 text-slate-600">{u.region}</td>
+                        <td className="p-3 text-slate-400 text-[11px]">
+                          {new Date(u.createdAt).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -271,20 +296,28 @@ export default function DatabaseViewerPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
-                  {farms.map((f) => (
-                    <tr key={f.id} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="p-3 font-mono text-[11px] text-emerald-800 font-bold">{f.id}</td>
-                      <td className="p-3 font-bold text-slate-900">{f.name}</td>
-                      <td className="p-3 text-slate-700">{f.owner}</td>
-                      <td className="p-3 font-mono text-[11px] text-slate-700">
-                        {f.latitude.toFixed(4)}°N, {f.longitude.toFixed(4)}°E
+                  {farms.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="p-8 text-center text-slate-500">
+                        No farm parcels registered. The database is empty.
                       </td>
-                      <td className="p-3 font-bold text-slate-800">{f.areaAcres} Acres</td>
-                      <td className="p-3 font-bold text-emerald-800">{f.crop}</td>
-                      <td className="p-3 text-slate-700 font-semibold">{f.soilType}</td>
-                      <td className="p-3 text-slate-500">{f.irrigationType}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    farms.map((f) => (
+                      <tr key={f.id} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="p-3 font-mono text-[11px] text-emerald-800 font-bold">{f.id}</td>
+                        <td className="p-3 font-bold text-slate-900">{f.name}</td>
+                        <td className="p-3 text-slate-700">{f.owner}</td>
+                        <td className="p-3 font-mono text-[11px] text-slate-700">
+                          {f.latitude.toFixed(4)}°N, {f.longitude.toFixed(4)}°E
+                        </td>
+                        <td className="p-3 font-bold text-slate-800">{f.areaAcres} Acres</td>
+                        <td className="p-3 font-bold text-emerald-800">{f.crop}</td>
+                        <td className="p-3 text-slate-700 font-semibold">{f.soilType}</td>
+                        <td className="p-3 text-slate-500">{f.irrigationType}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -318,19 +351,27 @@ export default function DatabaseViewerPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
-                  {soilRecords.map((s, idx) => (
-                    <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
-                      <td className="p-3 font-mono text-[11px] text-slate-700">{s.farmId}</td>
-                      <td className="p-3 font-bold text-slate-900">{s.soilType}</td>
-                      <td className="p-3 font-mono">{s.nitrogen} kg/ha</td>
-                      <td className="p-3 font-mono">{s.phosphorus} kg/ha</td>
-                      <td className="p-3 font-mono">{s.potassium} kg/ha</td>
-                      <td className="p-3 font-mono font-bold text-emerald-700">{s.ph}</td>
-                      <td className="p-3 font-mono">{s.organicCarbon}%</td>
-                      <td className="p-3 font-mono">{s.moisture}%</td>
-                      <td className="p-3 font-bold text-emerald-800">{s.soilScore} / 100</td>
+                  {soilRecords.length === 0 ? (
+                    <tr>
+                      <td colSpan={9} className="p-8 text-center text-slate-500">
+                        No soil telemetry records. The database is empty.
+                      </td>
                     </tr>
-                  ))}
+                  ) : (
+                    soilRecords.map((s, idx) => (
+                      <tr key={idx} className="hover:bg-slate-50/70 transition-colors">
+                        <td className="p-3 font-mono text-[11px] text-slate-700">{s.farmId}</td>
+                        <td className="p-3 font-bold text-slate-900">{s.soilType}</td>
+                        <td className="p-3 font-mono">{s.nitrogen} kg/ha</td>
+                        <td className="p-3 font-mono">{s.phosphorus} kg/ha</td>
+                        <td className="p-3 font-mono">{s.potassium} kg/ha</td>
+                        <td className="p-3 font-mono font-bold text-emerald-700">{s.ph}</td>
+                        <td className="p-3 font-mono">{s.organicCarbon}%</td>
+                        <td className="p-3 font-mono">{s.moisture}%</td>
+                        <td className="p-3 font-bold text-emerald-800">{s.soilScore} / 100</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
